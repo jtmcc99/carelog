@@ -65,7 +65,7 @@ QUESTIONS FOR THE DOCTOR
 ### Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/carelog.git
+git clone https://github.com/jtmcc17-boop/carelog.git
 cd carelog
 python3 -m venv venv
 source venv/bin/activate
