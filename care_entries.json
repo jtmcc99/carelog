@@ -1,78 +1,386 @@
 [
   {
-    "timestamp": "2026-03-24 09:54",
-    "reporter": "Mom",
-    "raw_text": "Mark was in a good mood this morning and memory was sharp",
-    "categories": {
-      "mood": "Was in a good mood this morning",
-      "cognition": "Memory was sharp"
-    }
-  },
-  {
-    "timestamp": "2026-03-24 09:56",
-    "reporter": "Mom",
-    "raw_text": "Feeling good no problems",
-    "categories": {
-      "mood": "Feeling good, no problems reported"
-    }
-  },
-  {
-    "timestamp": "2026-03-24 09:56",
-    "reporter": "Nurse",
-    "raw_text": "Mark was good today, happy",
-    "categories": {
-      "mood": "Happy and good today"
-    }
-  },
-  {
-    "timestamp": "2026-03-24 09:58",
+    "timestamp": "2026-01-25",
     "reporter": "Dad",
-    "raw_text": "Everything is normal, I feel fine",
+    "raw_text": "Feeling pretty good today. Watched the morning news, had my coffee. Can't remember if I took my pills but Linda will know.",
     "categories": {
-      "mood": "Reported feeling fine",
-      "other": "Everything described as normal"
+      "mood": "Feeling pretty good",
+      "medication": "Can't remember if took pills"
     }
   },
   {
-    "timestamp": "2026-03-24 09:58",
-    "reporter": "mom",
-    "raw_text": "Dad was extra forgetful today",
-    "categories": {
-      "cognition": "Was extra forgetful today"
-    }
-  },
-  {
-    "timestamp": "2026-03-24 10:14",
+    "timestamp": "2026-01-26",
     "reporter": "Mom",
-    "raw_text": "On march 19th Mark was extra sleepy",
+    "raw_text": "Mark forgot to take his morning medications again. Found him looking for his glasses while they were on his head. He got frustrated and snapped at me.",
     "categories": {
-      "sleep": "Mark was extra sleepy on March 19th"
+      "medication": "Forgot morning medications again",
+      "cognition": "Looking for glasses that were on his head",
+      "mood": "Got frustrated and snapped"
     }
   },
   {
-    "timestamp": "2026-03-24 10:15",
-    "reporter": "mom",
-    "raw_text": "this morning mark was in a great mood and memory was great",
+    "timestamp": "2026-01-27",
+    "reporter": "PT Mike",
+    "raw_text": "Good session with Mark today. Balance exercises went well, he remembered most of the routine from last week. Strength is maintaining well.",
     "categories": {
-      "mood": "Was in a great mood this morning",
-      "cognition": "Memory was great"
+      "physical_activity": "Balance exercises went well, strength maintaining",
+      "cognition": "Remembered most of routine from last week",
+      "mood": "Good session, face lights up talking about baseball"
     }
   },
   {
-    "timestamp": "2026-03-24 10:15",
-    "reporter": "mom",
-    "raw_text": "this afternoon mark was in a bad mood and was very confused",
+    "timestamp": "2026-01-28",
+    "reporter": "Nurse Amy",
+    "raw_text": "Mark seemed confused during visit. Asked me three times who I was. Linda reports he had a restless night.",
     "categories": {
-      "mood": "Was in a bad mood this afternoon",
-      "cognition": "Was very confused"
+      "cognition": "Confused, asked nurse three times who she was",
+      "sleep": "Restless night per Linda"
     }
   },
   {
-    "timestamp": "2026-03-24 10:15",
-    "reporter": "Nurse",
-    "raw_text": "this afternoon mark's memory was bad, he kept forgetting my name",
+    "timestamp": "2026-01-29",
+    "reporter": "Dad",
+    "raw_text": "Not sure what day it is. Feel okay though. Linda made pancakes I think? Or was that yesterday? Everything's a bit fuzzy but I'm not worried.",
     "categories": {
-      "cognition": "Memory was poor this afternoon, repeatedly forgot caregiver's name"
+      "cognition": "Not sure what day it is, everything fuzzy",
+      "mood": "Feel okay, not worried",
+      "meals": "Thinks Linda made pancakes"
+    }
+  },
+  {
+    "timestamp": "2026-01-30",
+    "reporter": "Jack",
+    "raw_text": "Visited Dad today. He recognized me right away and we had a great conversation. Sharp in the morning. By evening he was asking where Mom was even though she was right there.",
+    "categories": {
+      "cognition": "Sharp in morning, confused by evening asking where Mom was",
+      "social": "Recognized Jack, had great conversation",
+      "mood": "Good visit overall"
+    }
+  },
+  {
+    "timestamp": "2026-02-01",
+    "reporter": "Mom",
+    "raw_text": "Mark had a good morning, helped sort through mail and balanced the checkbook correctly. Took his pills without reminding. Napped for 3 hours this afternoon.",
+    "categories": {
+      "cognition": "Helped sort mail and balanced checkbook correctly",
+      "medication": "Took pills without reminding",
+      "sleep": "Napped for 3 hours in afternoon"
+    }
+  },
+  {
+    "timestamp": "2026-02-02",
+    "reporter": "Dad",
+    "raw_text": "Beautiful day! Feeling strong. Think I'll go for a walk around the block.",
+    "categories": {
+      "mood": "Feeling strong, beautiful day",
+      "physical_activity": "Planning to walk around the block"
+    }
+  },
+  {
+    "timestamp": "2026-02-03",
+    "reporter": "PT Mike",
+    "raw_text": "Mark seemed more unsteady today. Had to spot him more during balance work. He kept asking about his game tonight - seemed to think he had a baseball game to pitch.",
+    "categories": {
+      "physical_activity": "More unsteady, needed extra spotting during balance work",
+      "cognition": "Thought he had a baseball game to pitch, confused about the year"
+    }
+  },
+  {
+    "timestamp": "2026-02-04",
+    "reporter": "Mom",
+    "raw_text": "Difficult day. Mark woke up disoriented, didn't recognize our bedroom. Refused to take medications, said I was trying to poison him. Calmed down by afternoon but very tired.",
+    "categories": {
+      "cognition": "Disoriented, didn't recognize bedroom, accused wife of poisoning",
+      "medication": "Refused to take medications",
+      "mood": "Difficult day, calmed by afternoon",
+      "sleep": "Very tired"
+    }
+  },
+  {
+    "timestamp": "2026-02-05",
+    "reporter": "Nurse Beth",
+    "raw_text": "Mark was pleasant and cooperative. Good recall of recent events, knew the date. Medication compliance improving with pill organizer.",
+    "categories": {
+      "cognition": "Good recall, knew the date",
+      "medication": "Compliance improving with pill organizer",
+      "mood": "Pleasant and cooperative"
+    }
+  },
+  {
+    "timestamp": "2026-02-06",
+    "reporter": "Dad",
+    "raw_text": "Having trouble remembering words today. You know, the thing you eat cereal with... spoon! There it is. Linda's being patient with me.",
+    "categories": {
+      "cognition": "Word-finding difficulty",
+      "mood": "Can see Linda is worried"
+    }
+  },
+  {
+    "timestamp": "2026-02-07",
+    "reporter": "Jack",
+    "raw_text": "Dad was waiting at the window when I arrived, remembered I was coming. We watched a baseball documentary. His long-term memory for baseball is incredible.",
+    "categories": {
+      "cognition": "Remembered Jack was coming, incredible long-term baseball memory",
+      "social": "Watched documentary together, provided commentary"
+    }
+  },
+  {
+    "timestamp": "2026-02-09",
+    "reporter": "Mom",
+    "raw_text": "Mark seemed unsteady on his feet today, catching himself on furniture. I suggested using his walker but he refused.",
+    "categories": {
+      "physical_activity": "Unsteady, catching himself on furniture",
+      "incidents": "Refused to use walker despite unsteadiness"
+    }
+  },
+  {
+    "timestamp": "2026-02-10",
+    "reporter": "Mom",
+    "raw_text": "Mark fell in the bathroom this morning trying to get to the toilet without his walker. No serious injuries, bruised his hip. ER checked him out, sent him home.",
+    "categories": {
+      "incidents": "Fell in bathroom, bruised hip, ER visit, sent home",
+      "physical_activity": "Tried to walk without walker",
+      "mood": "Very shaken up"
+    }
+  },
+  {
+    "timestamp": "2026-02-11",
+    "reporter": "Dad",
+    "raw_text": "Sore from yesterday but okay. Don't know what all the fuss is about. Just lost my footing a little. These pills they gave me make me dizzy.",
+    "categories": {
+      "incidents": "Downplays fall as just losing footing",
+      "medication": "Reports new pills make him dizzy",
+      "mood": "Dismissive of concern"
+    }
+  },
+  {
+    "timestamp": "2026-02-12",
+    "reporter": "PT Mike",
+    "raw_text": "Light session focusing on fall recovery confidence. Mark is hesitant to move without support now. Reviewed bathroom safety. Wife installed grab bars.",
+    "categories": {
+      "physical_activity": "Light session, hesitant to move without support",
+      "incidents": "Fall recovery, bathroom safety reviewed, grab bars installed"
+    }
+  },
+  {
+    "timestamp": "2026-02-13",
+    "reporter": "Nurse Amy",
+    "raw_text": "Post-fall assessment. Mark moving more cautiously. Bruising healing well. Frustrated by safety restrictions but Linda is firm about walker use.",
+    "categories": {
+      "physical_activity": "Moving more cautiously, bruising healing",
+      "mood": "Frustrated by safety restrictions"
+    }
+  },
+  {
+    "timestamp": "2026-02-14",
+    "reporter": "Mom",
+    "raw_text": "Valentine's Day. Mark surprised me by remembering and had Jack pick up flowers. He's been using his walker consistently since the fall. Good day.",
+    "categories": {
+      "cognition": "Remembered Valentine's Day",
+      "mood": "Sweet gesture, good day",
+      "physical_activity": "Using walker consistently"
+    }
+  },
+  {
+    "timestamp": "2026-02-16",
+    "reporter": "Dad",
+    "raw_text": "This walker is embarrassing but Linda insists. Feeling stronger today. Watched spring training highlights. Wait, did I already say that?",
+    "categories": {
+      "physical_activity": "Using walker, feeling stronger",
+      "mood": "Embarrassed by walker",
+      "cognition": "Unsure if repeating himself"
+    }
+  },
+  {
+    "timestamp": "2026-02-17",
+    "reporter": "Jack",
+    "raw_text": "Dad seemed depressed today. Keeps talking about being a burden. I assured him he's not. Looking at old baseball cards cheered him up some.",
+    "categories": {
+      "mood": "Depressed, feels like a burden",
+      "social": "Baseball cards cheered him up"
+    }
+  },
+  {
+    "timestamp": "2026-02-19",
+    "reporter": "PT Mike",
+    "raw_text": "Mark's confidence slowly returning. Did well with balance exercises. Joked about being too old for this. Discussing home modifications with Linda.",
+    "categories": {
+      "physical_activity": "Balance improving, confidence returning",
+      "mood": "Joking, good effort"
+    }
+  },
+  {
+    "timestamp": "2026-02-20",
+    "reporter": "Mom",
+    "raw_text": "Mark had a very confused episode this afternoon. Thought I was his mother and kept asking when the game was. Lasted about an hour then he snapped back to normal.",
+    "categories": {
+      "cognition": "Thought wife was his mother, confused for an hour, no memory of episode after"
+    }
+  },
+  {
+    "timestamp": "2026-02-21",
+    "reporter": "Nurse Beth",
+    "raw_text": "Mark was oriented and pleasant today. No recollection of yesterday's confusion. Discussed medication timing - confusion episodes might be related to medication wearing off.",
+    "categories": {
+      "cognition": "Oriented, no recollection of previous confusion",
+      "medication": "Discussed timing, confusion may relate to medication wearing off"
+    }
+  },
+  {
+    "timestamp": "2026-02-22",
+    "reporter": "Dad",
+    "raw_text": "Good morning! Linda made my favorite breakfast. I remember taking my pills. Looking forward to getting out in the garden this year.",
+    "categories": {
+      "mood": "Good morning",
+      "medication": "Remembers taking pills",
+      "meals": "Linda made favorite breakfast"
+    }
+  },
+  {
+    "timestamp": "2026-02-24",
+    "reporter": "Mom",
+    "raw_text": "Mark forgot Jack was coming and was surprised to see him. They had a wonderful visit. Mark told the same story about his no-hitter three times.",
+    "categories": {
+      "cognition": "Forgot Jack was visiting, told same story three times",
+      "social": "Wonderful visit once adjusted"
+    }
+  },
+  {
+    "timestamp": "2026-02-26",
+    "reporter": "PT Mike",
+    "raw_text": "Excellent session. Mark's balance much improved since the fall. Gained confidence with walker, joked about putting baseball stickers on it.",
+    "categories": {
+      "physical_activity": "Balance much improved, gained confidence with walker",
+      "mood": "Great attitude, joking"
+    }
+  },
+  {
+    "timestamp": "2026-02-27",
+    "reporter": "Dad",
+    "raw_text": "Couldn't find my glasses this morning. Linda found them in the refrigerator. This is getting ridiculous. I feel like I'm losing my mind.",
+    "categories": {
+      "cognition": "Put glasses in refrigerator, couldn't find them",
+      "mood": "Frustrated, feels like losing his mind"
+    }
+  },
+  {
+    "timestamp": "2026-02-28",
+    "reporter": "Mom",
+    "raw_text": "Mark very agitated after the glasses incident. Keeps saying what's wrong with me. Evening was better after dinner and his favorite TV show.",
+    "categories": {
+      "mood": "Very agitated, scared, asking what's wrong with him. Better by evening",
+      "cognition": "Glasses incident aftermath"
+    }
+  },
+  {
+    "timestamp": "2026-03-01",
+    "reporter": "Nurse Amy",
+    "raw_text": "Mark expressed concerns about his memory during visit. He understands more than he sometimes lets on. Medication compliance improving.",
+    "categories": {
+      "cognition": "Expressed concerns about own memory, shows self-awareness",
+      "medication": "Compliance improving"
+    }
+  },
+  {
+    "timestamp": "2026-03-03",
+    "reporter": "Jack",
+    "raw_text": "Spring training started and Dad is glued to the TV. Can recall players stats from decades ago but can't remember what he had for lunch.",
+    "categories": {
+      "cognition": "Incredible long-term baseball memory, poor short-term recall",
+      "social": "Engaged with spring training on TV"
+    }
+  },
+  {
+    "timestamp": "2026-03-05",
+    "reporter": "PT Mike",
+    "raw_text": "Mark seemed distracted during therapy. Kept asking about the game tonight and whether his uniform was clean. Had to redirect several times.",
+    "categories": {
+      "physical_activity": "Distracted but completed exercises",
+      "cognition": "Confused about having a game tonight, needed redirection"
+    }
+  },
+  {
+    "timestamp": "2026-03-06",
+    "reporter": "Mom",
+    "raw_text": "Mark woke up thinking he was late for baseball practice. Took over an hour to orient him. These episodes are becoming more frequent. He napped most of the afternoon.",
+    "categories": {
+      "cognition": "Thought he was late for baseball practice, took an hour to orient",
+      "sleep": "Napped most of afternoon"
+    }
+  },
+  {
+    "timestamp": "2026-03-07",
+    "reporter": "Dad",
+    "raw_text": "Feeling okay today. Watched the Yankees game - they won! Or was that yesterday? At least I remember to use this walker now.",
+    "categories": {
+      "mood": "Feeling okay",
+      "cognition": "Unsure if game was today or yesterday",
+      "physical_activity": "Remembering to use walker"
+    }
+  },
+  {
+    "timestamp": "2026-03-09",
+    "reporter": "Nurse Beth",
+    "raw_text": "Mark had good and bad moments today. Clear and conversational at first, then confused about why I was there. Sleep has been restless.",
+    "categories": {
+      "cognition": "Clear then confused within same visit",
+      "sleep": "Restless sleep lately"
+    }
+  },
+  {
+    "timestamp": "2026-03-11",
+    "reporter": "Mom",
+    "raw_text": "Better day. Mark helped organize his baseball card collection. His memory for players and stats is incredible. Proud showing me cards I've seen a hundred times.",
+    "categories": {
+      "cognition": "Incredible long-term memory for baseball",
+      "mood": "Proud, good day",
+      "social": "Organized cards together"
+    }
+  },
+  {
+    "timestamp": "2026-03-12",
+    "reporter": "PT Mike",
+    "raw_text": "Strong session. Mark's mobility continues to improve. Told me about pitching in the minor leagues - such detailed stories. Walking with more confidence.",
+    "categories": {
+      "physical_activity": "Mobility improving, walking with confidence",
+      "cognition": "Detailed long-term memories of baseball career",
+      "mood": "Strong session"
+    }
+  },
+  {
+    "timestamp": "2026-03-14",
+    "reporter": "Jack",
+    "raw_text": "Dad had a really sharp morning. We discussed current baseball trades with insightful opinions. By the time I left he'd asked me the same question about my job four times.",
+    "categories": {
+      "cognition": "Sharp morning with insightful opinions, but repeated same question four times by end of visit",
+      "social": "Good visit discussing baseball trades"
+    }
+  },
+  {
+    "timestamp": "2026-03-16",
+    "reporter": "Dad",
+    "raw_text": "Can't seem to get my words out right today. The thing that... the round thing you hit with the bat. Baseball! This is frustrating but I'm managing.",
+    "categories": {
+      "cognition": "Word-finding difficulty, struggling to recall common words",
+      "mood": "Frustrated but managing"
+    }
+  },
+  {
+    "timestamp": "2026-03-19",
+    "reporter": "PT Mike",
+    "raw_text": "Mark seemed tired today but pushed through exercises. Balance is good, strength maintaining. Got emotional talking about not being able to play catch with his grandson.",
+    "categories": {
+      "physical_activity": "Tired but completed exercises, balance good",
+      "mood": "Got emotional about not being able to play catch with grandson"
+    }
+  },
+  {
+    "timestamp": "2026-03-24",
+    "reporter": "Mom",
+    "raw_text": "Spring cleaning day. Mark tried to help but got overwhelmed and frustrated. Found him sitting in his chair looking at old team photos.",
+    "categories": {
+      "mood": "Overwhelmed and frustrated, then quiet looking at old photos",
+      "cognition": "Got overwhelmed trying to help with cleaning"
     }
   }
 ]
