@@ -1,0 +1,78 @@
+[
+  {
+    "timestamp": "2026-03-24 09:54",
+    "reporter": "Mom",
+    "raw_text": "Mark was in a good mood this morning and memory was sharp",
+    "categories": {
+      "mood": "Was in a good mood this morning",
+      "cognition": "Memory was sharp"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 09:56",
+    "reporter": "Mom",
+    "raw_text": "Feeling good no problems",
+    "categories": {
+      "mood": "Feeling good, no problems reported"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 09:56",
+    "reporter": "Nurse",
+    "raw_text": "Mark was good today, happy",
+    "categories": {
+      "mood": "Happy and good today"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 09:58",
+    "reporter": "Dad",
+    "raw_text": "Everything is normal, I feel fine",
+    "categories": {
+      "mood": "Reported feeling fine",
+      "other": "Everything described as normal"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 09:58",
+    "reporter": "mom",
+    "raw_text": "Dad was extra forgetful today",
+    "categories": {
+      "cognition": "Was extra forgetful today"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 10:14",
+    "reporter": "Mom",
+    "raw_text": "On march 19th Mark was extra sleepy",
+    "categories": {
+      "sleep": "Mark was extra sleepy on March 19th"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 10:15",
+    "reporter": "mom",
+    "raw_text": "this morning mark was in a great mood and memory was great",
+    "categories": {
+      "mood": "Was in a great mood this morning",
+      "cognition": "Memory was great"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 10:15",
+    "reporter": "mom",
+    "raw_text": "this afternoon mark was in a bad mood and was very confused",
+    "categories": {
+      "mood": "Was in a bad mood this afternoon",
+      "cognition": "Was very confused"
+    }
+  },
+  {
+    "timestamp": "2026-03-24 10:15",
+    "reporter": "Nurse",
+    "raw_text": "this afternoon mark's memory was bad, he kept forgetting my name",
+    "categories": {
+      "cognition": "Memory was poor this afternoon, repeatedly forgot caregiver's name"
+    }
+  }
+]
