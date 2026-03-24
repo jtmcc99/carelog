@@ -2,6 +2,7 @@ import streamlit as st
 import anthropic
 import json
 from datetime import datetime
+from rag import add_entry_to_db, search_entries, rebuild_db, get_entry_count
 
 client = anthropic.Anthropic()
 LOG_FILE = "care_entries.json"
@@ -89,6 +90,7 @@ with tab1:
                     }
                     entries.append(entry)
                     save_entries(entries)
+                    
                     st.success("Entry saved!")
                     for cat, detail in categories.items():
                         st.write(f"**{cat}**: {detail}")
@@ -133,6 +135,7 @@ with tab2:
                 }
                 entries.append(entry)
                 save_entries(entries)
+                add_entry_to_db(entry, len(entries) - 1)
                 st.success("Journal entry saved!")
                 st.session_state.journal_counter += 1
                 st.rerun()
@@ -181,17 +184,34 @@ with tab4:
         if not entries:
             st.warning("No entries to search.")
         elif question:
-            with st.spinner("Searching care log..."):
-                entries_text = get_entries_text(entries)
-                response = client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=1024,
-                    system="""You are a care log assistant. You answer questions based ONLY on the
+            with st.spinner("Searching relevant entries..."):
+                relevant = search_entries(question, n_results=10)
+
+                if not relevant:
+                    st.warning("No relevant entries found.")
+                else:
+                    entries_text = ""
+                    for e in relevant:
+                        entries_text += f"\n[{e['timestamp']}] {e['reporter']}:\n"
+                        entries_text += f"  Raw: {e['raw_text']}\n"
+                        for cat, detail in e['categories'].items():
+                            entries_text += f"  {cat}: {detail}\n"
+
+                    response = client.messages.create(
+                        model="claude-sonnet-4-20250514",
+                        max_tokens=1024,
+                        system="""You are a care log assistant. You answer questions based ONLY on the
 log entries provided. Always note who reported what and when. If perspectives
 conflict, highlight the difference — don't pick a side. This is important for
 medical accuracy.""",
-                    messages=[
-                        {"role": "user", "content": f"Here are the care log entries:\n{entries_text}\n\nQuestion: {question}"}
-                    ]
-                )
-                st.markdown(response.content[0].text)
+                        messages=[
+                            {"role": "user", "content": f"Here are the relevant care log entries:\n{entries_text}\n\nQuestion: {question}"}
+                        ]
+                    )
+                    st.markdown(response.content[0].text)
+
+                    with st.expander("See which entries were used"):
+                        for e in relevant:
+                            st.caption(f"[{e['timestamp']}] {e['reporter']}")
+                            st.write(e['raw_text'])
+                            st.divider()
