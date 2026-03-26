@@ -82,7 +82,7 @@ body {
   width: 42px;
   height: 42px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--accent), #4299e1);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #1a1a2e));
   color: white;
   display: flex;
   align-items: center;
@@ -90,7 +90,8 @@ body {
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.5px;
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transition: background 0.3s, box-shadow 0.3s;
 }
 
 h1 {
@@ -238,6 +239,66 @@ h1 {
   box-shadow: 0 0 12px var(--accent-glow);
 }
 
+/* ── Reporter Chip Management ───────────── */
+
+.chip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.chip-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(252, 129, 129, 0.25);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.chip-wrapper:hover .chip-remove {
+  display: flex;
+}
+
+.chip-remove:hover {
+  background: rgba(252, 129, 129, 0.25);
+}
+
+.add-chip {
+  border-style: dashed;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.add-chip:hover {
+  color: var(--accent);
+  border-color: rgba(99, 179, 237, 0.3);
+}
+
+.add-reporter-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.add-reporter-input {
+  width: 120px !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  border-radius: var(--radius-full) !important;
+  height: 30px;
+}
+
 textarea,
 input[type="text"],
 input[type="date"] {
@@ -281,7 +342,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* ── Buttons ────────────────────────────── */
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #4299e1);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #1a1a2e));
   color: white;
   border: none;
   padding: 9px 22px;
@@ -292,7 +353,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+  transition: transform 0.15s, box-shadow 0.3s, opacity 0.2s, background 0.3s;
   box-shadow: 0 2px 12px var(--accent-glow);
   letter-spacing: 0.2px;
 }

@@ -1,19 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Send,
   FileText,
-  MessageCircle,
   ClipboardList,
   BookHeart,
   Loader2,
   Sparkles,
   CalendarDays,
+  Plus,
+  X,
 } from "lucide-react";
 import "./App.css";
 
 const API = "http://localhost:8000/api";
 
-const REPORTERS = ["Mom", "Jack", "Nurse Amy", "Nurse Beth", "PT Mike"];
+const DEFAULT_REPORTERS = ["Mom", "Jack", "Nurse Amy", "Nurse Beth", "PT Mike"];
+
+const REPORTER_PALETTE = [
+  { hue: 152, accent: "#68d391", rgb: "104,211,145" },
+  { hue: 28,  accent: "#f6ad55", rgb: "246,173,85" },
+  { hue: 330, accent: "#f687b3", rgb: "246,135,179" },
+  { hue: 270, accent: "#b794f4", rgb: "183,148,244" },
+  { hue: 0,   accent: "#fc8181", rgb: "252,129,129" },
+  { hue: 207, accent: "#63b3ed", rgb: "99,179,237" },
+  { hue: 185, accent: "#76e4f7", rgb: "118,228,247" },
+  { hue: 45,  accent: "#fbd38d", rgb: "251,211,141" },
+  { hue: 290, accent: "#d6bcfa", rgb: "214,188,250" },
+  { hue: 15,  accent: "#feb2b2", rgb: "254,178,178" },
+];
+
+function getReporterColor(name, reporters) {
+  const idx = reporters.indexOf(name);
+  const palette = REPORTER_PALETTE[idx >= 0 ? idx % REPORTER_PALETTE.length : 5];
+  return palette;
+}
 
 const CATEGORY_STYLES = {
   mood: "tag-mood",
@@ -27,17 +47,6 @@ const CATEGORY_STYLES = {
   other: "tag-other",
 };
 
-const AVATAR_COLORS = {
-  Mom: { bg: "rgba(104,211,145,0.15)", text: "#68d391", border: "rgba(104,211,145,0.25)" },
-  Dad: { bg: "rgba(99,179,237,0.15)", text: "#63b3ed", border: "rgba(99,179,237,0.25)" },
-  Patient: { bg: "rgba(99,179,237,0.15)", text: "#63b3ed", border: "rgba(99,179,237,0.25)" },
-  Mark: { bg: "rgba(99,179,237,0.15)", text: "#63b3ed", border: "rgba(99,179,237,0.25)" },
-  Jack: { bg: "rgba(246,173,85,0.15)", text: "#f6ad55", border: "rgba(246,173,85,0.25)" },
-  "Nurse Amy": { bg: "rgba(246,135,179,0.15)", text: "#f687b3", border: "rgba(246,135,179,0.25)" },
-  "Nurse Beth": { bg: "rgba(183,148,244,0.15)", text: "#b794f4", border: "rgba(183,148,244,0.25)" },
-  "PT Mike": { bg: "rgba(252,129,129,0.15)", text: "#fc8181", border: "rgba(252,129,129,0.25)" },
-};
-
 function CategoryTag({ category }) {
   const cls = CATEGORY_STYLES[category] || CATEGORY_STYLES.other;
   return (
@@ -47,8 +56,8 @@ function CategoryTag({ category }) {
   );
 }
 
-function ReporterAvatar({ name }) {
-  const c = AVATAR_COLORS[name] || { bg: "rgba(255,255,255,0.08)", text: "#8b95a5", border: "rgba(255,255,255,0.12)" };
+function ReporterAvatar({ name, reporters }) {
+  const pal = getReporterColor(name, reporters);
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -57,17 +66,30 @@ function ReporterAvatar({ name }) {
   return (
     <div
       className="reporter-avatar"
-      style={{ background: c.bg, color: c.text, borderColor: c.border }}
+      style={{
+        background: `rgba(${pal.rgb},0.15)`,
+        color: pal.accent,
+        borderColor: `rgba(${pal.rgb},0.25)`,
+      }}
     >
       {initials}
     </div>
   );
 }
 
+function loadReporters() {
+  try {
+    const saved = localStorage.getItem("carelog-reporters");
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return DEFAULT_REPORTERS;
+}
+
 function App() {
   const [tab, setTab] = useState("timeline");
   const [entries, setEntries] = useState([]);
-  const [reporter, setReporter] = useState("Mom");
+  const [reporters, setReporters] = useState(loadReporters);
+  const [reporter, setReporter] = useState(() => loadReporters()[0] || "Mom");
   const [rawText, setRawText] = useState("");
   const [journalText, setJournalText] = useState("");
   const [question, setQuestion] = useState("");
@@ -76,6 +98,12 @@ function App() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [newReporterName, setNewReporterName] = useState("");
+  const [showAddReporter, setShowAddReporter] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("carelog-reporters", JSON.stringify(reporters));
+  }, [reporters]);
 
   useEffect(() => {
     fetch(`${API}/entries`)
@@ -83,6 +111,34 @@ function App() {
       .then(setEntries)
       .catch(console.error);
   }, []);
+
+  const activeColor = useMemo(
+    () => getReporterColor(reporter, reporters),
+    [reporter, reporters]
+  );
+
+  const accentStyle = useMemo(() => ({
+    "--accent": activeColor.accent,
+    "--accent-glow": `rgba(${activeColor.rgb},0.15)`,
+    "--accent-glow-strong": `rgba(${activeColor.rgb},0.25)`,
+    "--border-focus": `rgba(${activeColor.rgb},0.4)`,
+  }), [activeColor]);
+
+  const addReporter = () => {
+    const name = newReporterName.trim();
+    if (!name || reporters.includes(name)) return;
+    setReporters((prev) => [...prev, name]);
+    setReporter(name);
+    setNewReporterName("");
+    setShowAddReporter(false);
+  };
+
+  const removeReporter = (name) => {
+    setReporters((prev) => prev.filter((r) => r !== name));
+    if (reporter === name) {
+      setReporter(reporters.find((r) => r !== name) || "");
+    }
+  };
 
   const submitEntry = async (reporterName, text) => {
     if (!text.trim()) return;
@@ -94,13 +150,20 @@ function App() {
         body: JSON.stringify({ reporter: reporterName, raw_text: text }),
       });
       const newEntry = await res.json();
-      setEntries((prev) => [...prev, newEntry]);
+      setEntries((prev) => [newEntry, ...prev]);
       setRawText("");
       setJournalText("");
     } catch (err) {
       console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleTextareaKeyDown = (e, reporterName, text) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitEntry(reporterName, text);
+    }
   };
 
   const askQuestion = async () => {
@@ -160,7 +223,7 @@ function App() {
   ];
 
   return (
-    <div className="app">
+    <div className="app" style={accentStyle}>
       <header className="header">
         <div className="header-left">
           <div className="logo">CL</div>
@@ -197,20 +260,83 @@ function App() {
             <div className="card entry-form">
               <p className="form-label">New entry</p>
               <div className="reporter-chips">
-                {REPORTERS.map((r) => (
+                {reporters.map((r) => {
+                  const pal = getReporterColor(r, reporters);
+                  return (
+                    <div key={r} className="chip-wrapper">
+                      <button
+                        className={`chip ${reporter === r ? "active" : ""}`}
+                        onClick={() => setReporter(r)}
+                        style={
+                          reporter === r
+                            ? {
+                                background: `rgba(${pal.rgb},0.15)`,
+                                color: pal.accent,
+                                borderColor: `rgba(${pal.rgb},0.3)`,
+                                boxShadow: `0 0 12px rgba(${pal.rgb},0.15)`,
+                              }
+                            : undefined
+                        }
+                      >
+                        {r}
+                      </button>
+                      <button
+                        className="chip-remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeReporter(r);
+                        }}
+                        title={`Remove ${r}`}
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  );
+                })}
+                {showAddReporter ? (
+                  <div className="add-reporter-inline">
+                    <input
+                      type="text"
+                      className="add-reporter-input"
+                      placeholder="Name..."
+                      value={newReporterName}
+                      onChange={(e) => setNewReporterName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") addReporter();
+                        if (e.key === "Escape") {
+                          setShowAddReporter(false);
+                          setNewReporterName("");
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <button className="chip add-chip" onClick={addReporter}>
+                      <Plus size={12} /> Add
+                    </button>
+                    <button
+                      className="chip"
+                      onClick={() => {
+                        setShowAddReporter(false);
+                        setNewReporterName("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
                   <button
-                    key={r}
-                    className={`chip ${reporter === r ? "active" : ""}`}
-                    onClick={() => setReporter(r)}
+                    className="chip add-chip"
+                    onClick={() => setShowAddReporter(true)}
                   >
-                    {r}
+                    <Plus size={12} />
                   </button>
-                ))}
+                )}
               </div>
               <textarea
-                placeholder="Describe what happened in plain language..."
+                placeholder="Describe what happened in plain language... (Enter to save, Shift+Enter for new line)"
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
+                onKeyDown={(e) => handleTextareaKeyDown(e, reporter, rawText)}
                 rows={3}
               />
               <div className="form-actions">
@@ -242,7 +368,7 @@ function App() {
                   {dayEntries.map((entry, i) => (
                     <div className="timeline-entry" key={i}>
                       <div className="timeline-left">
-                        <ReporterAvatar name={entry.reporter} />
+                        <ReporterAvatar name={entry.reporter} reporters={reporters} />
                         {i < dayEntries.length - 1 && (
                           <div className="timeline-line" />
                         )}
@@ -287,9 +413,10 @@ function App() {
                 This is your private space. Write whatever is on your mind.
               </p>
               <textarea
-                placeholder="I'm feeling..."
+                placeholder="I'm feeling... (Enter to save, Shift+Enter for new line)"
                 value={journalText}
                 onChange={(e) => setJournalText(e.target.value)}
+                onKeyDown={(e) => handleTextareaKeyDown(e, "Patient", journalText)}
                 rows={4}
               />
               <div className="form-actions">
