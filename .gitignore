@@ -5,4 +5,8 @@ node_modules/
 package-lock.json
 carelog_db/
 care_entries.json
+doctor_visits.json
+*.db
 .env
+frontend/dist/
+.vercel/
