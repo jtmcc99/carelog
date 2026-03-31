@@ -7,6 +7,8 @@ from datetime import datetime
 import anthropic
 import json
 
+from sqlalchemy import inspect, text
+
 from database import engine, get_db, Base
 from models import CareCircle, User, Entry, Visit, ChangeLog
 from auth import (
@@ -15,6 +17,24 @@ from auth import (
 )
 
 Base.metadata.create_all(bind=engine)
+
+
+def ensure_journal_public_column():
+    try:
+        insp = inspect(engine)
+        cols = [c["name"] for c in insp.get_columns("users")]
+    except Exception:
+        return
+    if "journal_public" in cols:
+        return
+    with engine.begin() as conn:
+        if engine.dialect.name == "sqlite":
+            conn.execute(text("ALTER TABLE users ADD COLUMN journal_public BOOLEAN DEFAULT 1 NOT NULL"))
+        else:
+            conn.execute(text("ALTER TABLE users ADD COLUMN journal_public BOOLEAN DEFAULT true NOT NULL"))
+
+
+ensure_journal_public_column()
 
 app = FastAPI()
 
@@ -46,6 +66,11 @@ class UpdateUserRequest(BaseModel):
     active: Optional[bool] = None
     password: Optional[str] = None
     relationship: Optional[str] = None
+    journal_public: Optional[bool] = None
+
+
+class JournalVisibilityRequest(BaseModel):
+    journal_public: bool
 
 class LogEntryRequest(BaseModel):
     raw_text: str
@@ -101,6 +126,9 @@ def visit_to_dict(v: Visit) -> dict:
     }
 
 def user_to_dict(u: User) -> dict:
+    jp = getattr(u, "journal_public", True)
+    if jp is None:
+        jp = True
     return {
         "id": u.id,
         "username": u.username,
@@ -109,8 +137,30 @@ def user_to_dict(u: User) -> dict:
         "relationship": u.relationship or "",
         "circle_id": u.circle_id,
         "active": u.active,
+        "journal_public": jp,
         "created_at": u.created_at.isoformat() if u.created_at else "",
     }
+
+
+def filter_entries_for_viewer(entries: list, viewer: User, db: Session) -> list:
+    """Hide entries authored by patients who set journal to private, unless the viewer is that patient."""
+    private_author_ids = {
+        u.id
+        for u in db.query(User).filter(
+            User.circle_id == viewer.circle_id,
+            User.role == "patient",
+        ).all()
+        if getattr(u, "journal_public", True) is False
+    }
+    if not private_author_ids:
+        return entries
+    out = []
+    for e in entries:
+        aid = e.created_by
+        if aid and aid in private_author_ids and aid != viewer.id:
+            continue
+        out.append(e)
+    return out
 
 def circle_to_dict(c: CareCircle) -> dict:
     return {
@@ -165,6 +215,22 @@ def get_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)
         **user_to_dict(user),
         "circle": circle_to_dict(circle) if circle else None,
     }
+
+
+@app.patch("/api/me/journal-visibility")
+def set_journal_visibility(
+    req: JournalVisibilityRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "patient":
+        raise HTTPException(status_code=403, detail="Only the patient account can change journal visibility")
+    user.journal_public = req.journal_public
+    db.commit()
+    db.refresh(user)
+    log_action(db, "journal_visibility_changed", {"journal_public": req.journal_public}, user)
+    return user_to_dict(user)
+
 
 # ── Admin: User Management ───────────────────
 
@@ -233,6 +299,11 @@ def update_user(
     if req.relationship is not None:
         changes["relationship"] = req.relationship
         user.relationship = req.relationship
+    if req.journal_public is not None:
+        if user.role != "patient":
+            raise HTTPException(status_code=400, detail="journal_public applies only to patient accounts")
+        changes["journal_public"] = req.journal_public
+        user.journal_public = req.journal_public
 
     db.commit()
     log_action(db, "user_updated", {"target_user": user.username, **changes}, admin)
@@ -276,6 +347,7 @@ def get_entries(user: User = Depends(get_current_user), db: Session = Depends(ge
         Entry.circle_id == user.circle_id,
         Entry.deleted_at == None,
     ).order_by(Entry.id.desc()).all()
+    entries = filter_entries_for_viewer(entries, user, db)
     return [entry_to_dict(e) for e in entries]
 
 @app.post("/api/entries")
@@ -371,6 +443,7 @@ def ask_question(
     db: Session = Depends(get_db),
 ):
     entries = db.query(Entry).filter(Entry.circle_id == user.circle_id, Entry.deleted_at == None).all()
+    entries = filter_entries_for_viewer(entries, user, db)
     if not entries:
         return {"answer": "No entries yet."}
 
@@ -411,6 +484,7 @@ def generate_summary(
         query = query.filter(Entry.timestamp >= req.start_date, Entry.timestamp <= req.end_date)
 
     entries = query.all()
+    entries = filter_entries_for_viewer(entries, user, db)
     if not entries:
         return {"summary": "No entries found in that date range." if req.start_date else "No entries yet."}
 

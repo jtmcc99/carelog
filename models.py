@@ -23,6 +23,7 @@ class User(Base):
     relationship = Column(String(100), nullable=True, default="")
     circle_id = Column(Integer, nullable=False, index=True)
     active = Column(Boolean, default=True)
+    journal_public = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

@@ -22,6 +22,7 @@ import {
   Shield,
   User as UserIcon,
   Heart,
+  Info,
 } from "lucide-react";
 import "./App.css";
 
@@ -196,6 +197,78 @@ function LoginPage({ onLogin }) {
   );
 }
 
+/** Local calendar date YYYY-MM-DD */
+function formatLocalYMD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Turn free text (e.g. "show me info for the last week") into { start, end } for Recap.
+ * "Last week" and similar map to the last 7 days ending today (inclusive).
+ */
+function parseRecapDatePhrase(phrase) {
+  const p = phrase.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!p) return null;
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const addDays = (base, delta) => {
+    const d = new Date(base);
+    d.setDate(d.getDate() + delta);
+    return d;
+  };
+  const rangeDays = (n) => {
+    const end = new Date(today);
+    const start = addDays(today, -(n - 1));
+    return { start: formatLocalYMD(start), end: formatLocalYMD(end) };
+  };
+
+  if (/\btoday\b/.test(p)) {
+    const d = formatLocalYMD(today);
+    return { start: d, end: d };
+  }
+  if (/\byesterday\b/.test(p)) {
+    const y = addDays(today, -1);
+    const d = formatLocalYMD(y);
+    return { start: d, end: d };
+  }
+
+  const numDays = p.match(/\b(?:last|past)\s+(\d+)\s+days?\b/);
+  if (numDays) {
+    let n = parseInt(numDays[1], 10);
+    if (Number.isNaN(n) || n < 1) n = 1;
+    if (n > 366) n = 366;
+    return rangeDays(n);
+  }
+
+  if (
+    /\b(?:last|past)\s+week\b/.test(p)
+    || /\blast\s+7\s+days?\b/.test(p)
+    || /\bpast\s+7\s+days?\b/.test(p)
+    || /\bseven\s+days\b/.test(p)
+  ) {
+    return rangeDays(7);
+  }
+
+  if (/\b(?:last|past)\s+(?:two|2)\s+weeks?\b/.test(p) || /\blast\s+14\s+days?\b/.test(p) || /\bpast\s+14\s+days?\b/.test(p)) {
+    return rangeDays(14);
+  }
+
+  if (/\b(?:last|past)\s+month\b/.test(p) || /\blast\s+30\s+days?\b/.test(p) || /\bpast\s+30\s+days?\b/.test(p)) {
+    return rangeDays(30);
+  }
+
+  if (/\bthis\s+month\b/.test(p)) {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    start.setHours(12, 0, 0, 0);
+    return { start: formatLocalYMD(start), end: formatLocalYMD(today) };
+  }
+
+  return null;
+}
+
 /* ── Main App ────────────────────────────── */
 
 function App() {
@@ -226,22 +299,31 @@ function App() {
     setCircle(null);
   };
 
+  const updateUser = useCallback((partial) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...partial };
+      localStorage.setItem("carelog-user", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   if (!token || !user) return <LoginPage onLogin={handleLogin} />;
 
   return (
-    <AuthContext.Provider value={{ token, user, circle, logout: handleLogout }}>
+    <AuthContext.Provider value={{ token, user, circle, logout: handleLogout, updateUser }}>
       <MainApp />
     </AuthContext.Provider>
   );
 }
 
 function MainApp() {
-  const { token, user, circle, logout } = useAuth();
+  const { token, user, circle, logout, updateUser } = useAuth();
   const isAdmin = user.role === "admin";
   const isPatient = user.role === "patient";
   const patientName = circle?.patient_name || "your patient";
 
-  const [tab, setTab] = useState("timeline");
+  const [tab, setTab] = useState(() => (user.role === "patient" ? "journal" : "timeline"));
   const [entries, setEntries] = useState([]);
   const [allReporters, setAllReporters] = useState([]);
   const [rawText, setRawText] = useState("");
@@ -252,6 +334,8 @@ function MainApp() {
   const [summaryLength, setSummaryLength] = useState("long");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [recapDatePhrase, setRecapDatePhrase] = useState("");
+  const [recapDateFeedback, setRecapDateFeedback] = useState("");
   const [loading, setLoading] = useState(false);
   const [filterCategory, setFilterCategory] = useState(null);
   const [filterReporters, setFilterReporters] = useState([]);
@@ -281,6 +365,9 @@ function MainApp() {
   const [newUser, setNewUser] = useState({ username: "", password: "", display_name: "", role: "user", relationship: "" });
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({ display_name: "", role: "", relationship: "", password: "", active: true });
+  const [journalVisSaving, setJournalVisSaving] = useState(false);
+  const [journalPrivacyInfoOpen, setJournalPrivacyInfoOpen] = useState(false);
+  const journalPrivacyInfoRef = useRef(null);
 
   const speech = useSpeechRecognition();
   const hdrs = useMemo(() => authHeaders(token), [token]);
@@ -303,12 +390,48 @@ function MainApp() {
     }
   }, [isAdmin, tab, hdrs]);
 
+  useEffect(() => {
+    if (!journalPrivacyInfoOpen) return;
+    const close = (e) => {
+      if (journalPrivacyInfoRef.current && !journalPrivacyInfoRef.current.contains(e.target)) {
+        setJournalPrivacyInfoOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [journalPrivacyInfoOpen]);
+
   const activeColor = useMemo(
     () => getReporterColor(user.display_name, allReporters),
     [user.display_name, allReporters]
   );
 
   const accentStyle = useMemo(() => ({}), []);
+
+  const journalIsPublic = user.journal_public !== false;
+
+  const setJournalVisibility = async (nextPublic) => {
+    setJournalVisSaving(true);
+    try {
+      const res = await fetch(`${API}/me/journal-visibility`, {
+        method: "PATCH",
+        headers: hdrs,
+        body: JSON.stringify({ journal_public: nextPublic }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const d = err.detail;
+        const msg = Array.isArray(d) ? d.map((x) => x.msg || x).join(" ") : (d || res.statusText);
+        throw new Error(msg);
+      }
+      const u = await res.json();
+      updateUser({ journal_public: u.journal_public });
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Could not update journal visibility.");
+    }
+    setJournalVisSaving(false);
+  };
 
   // ── Entry Actions ──────────────────────────
 
@@ -398,14 +521,36 @@ function MainApp() {
     setLoading(false);
   };
 
-  const getSummary = async () => {
+  const getSummary = async (dateOverride = null) => {
+    const start = dateOverride?.start ?? startDate;
+    const end = dateOverride?.end ?? endDate;
     setLoading(true); setSummary("");
     try {
-      const res = await fetch(`${API}/summary`, { method: "POST", headers: hdrs, body: JSON.stringify({ start_date: startDate, end_date: endDate, length: summaryLength }) });
+      const res = await fetch(`${API}/summary`, { method: "POST", headers: hdrs, body: JSON.stringify({ start_date: start, end_date: end, length: summaryLength }) });
       const data = await res.json();
       setSummary(data.summary);
     } catch (err) { console.error(err); }
     setLoading(false);
+  };
+
+  /** Parse optional phrase, update date fields when matched, then generate summary (used by Enter + Generate). */
+  const submitRecapWithPhrase = async () => {
+    const t = recapDatePhrase.trim();
+    let dateOverride = null;
+    if (t) {
+      const r = parseRecapDatePhrase(recapDatePhrase);
+      if (r) {
+        dateOverride = r;
+        setStartDate(r.start);
+        setEndDate(r.end);
+        setRecapDateFeedback("");
+      } else {
+        setRecapDateFeedback("Could not match that range; using the dates above.");
+      }
+    } else {
+      setRecapDateFeedback("");
+    }
+    await getSummary(dateOverride);
   };
 
   // ── Doctor Visit Functions ────────────────
@@ -521,12 +666,60 @@ function MainApp() {
     (e) => e.timestamp >= todayStr && e.reporter === user.display_name && e.raw_text.startsWith("Daily Check-In:")
   );
 
-  const tabs = [
-    { id: "timeline", label: "Thread", icon: <ClipboardList size={15} />, show: true },
-    { id: "summary", label: "Recap", icon: <FileText size={15} />, show: !isPatient },
-    { id: "ask", label: "Ask Questions", icon: <Sparkles size={15} />, show: !isPatient },
-    { id: "visits", label: "Doctor Visits", icon: <Stethoscope size={15} />, show: !isPatient },
-  ].filter((t) => t.show);
+  const renderJournalPrivacyCluster = () => (
+    <div className="journal-privacy-cluster">
+      <div className="journal-privacy-toggle-stack">
+        <button
+          type="button"
+          className={`journal-privacy-toggle ${journalIsPublic ? "is-public" : "is-private"}`}
+          onClick={() => setJournalVisibility(!journalIsPublic)}
+          disabled={journalVisSaving}
+          aria-pressed={journalIsPublic}
+          aria-label={journalIsPublic ? "Journal shared with family, click to make private" : "Private journal, click to share with family"}
+          title={journalIsPublic ? "Shared with family" : "Private"}
+        >
+          <span className="journal-privacy-toggle-track" aria-hidden>
+            <span className="journal-privacy-toggle-thumb" />
+          </span>
+        </button>
+        <span className={`journal-privacy-toggle-caption ${journalIsPublic ? "is-public" : "is-private"}`}>
+          {journalIsPublic ? "Public" : "Private"}
+        </span>
+      </div>
+      {journalVisSaving && <Loader2 size={16} className="spin journal-privacy-saving-icon" aria-hidden />}
+      <div ref={journalPrivacyInfoRef} className={`journal-privacy-info-wrap ${journalPrivacyInfoOpen ? "is-open" : ""}`}>
+        <button
+          type="button"
+          className="btn-icon journal-privacy-info-btn"
+          aria-label="About journal sharing"
+          aria-expanded={journalPrivacyInfoOpen}
+          aria-controls="journal-privacy-tip"
+          onClick={() => setJournalPrivacyInfoOpen((o) => !o)}
+        >
+          <Info size={17} strokeWidth={2.25} />
+        </button>
+        <div id="journal-privacy-tip" className="journal-privacy-tooltip" role="tooltip">
+          <strong>Shared:</strong> family sees your entries on Thread, Recap, and Ask Questions.
+          <strong> Private:</strong> only you can see them.
+        </div>
+      </div>
+    </div>
+  );
+
+  const tabs = isPatient
+    ? [
+        { id: "journal", label: "My Journal", icon: <BookHeart size={18} strokeWidth={2.25} /> },
+        { id: "summary", label: "Recap", icon: <FileText size={18} strokeWidth={2.25} /> },
+        { id: "ask", label: "Ask Questions", icon: <Sparkles size={18} strokeWidth={2.25} /> },
+        { id: "visits", label: "Doctor Visits", icon: <Stethoscope size={18} strokeWidth={2.25} /> },
+        { id: "timeline", label: "Thread", icon: <ClipboardList size={18} strokeWidth={2.25} /> },
+      ]
+    : [
+        { id: "timeline", label: "Thread", icon: <ClipboardList size={18} strokeWidth={2.25} /> },
+        { id: "summary", label: "Recap", icon: <FileText size={18} strokeWidth={2.25} /> },
+        { id: "ask", label: "Ask Questions", icon: <Sparkles size={18} strokeWidth={2.25} /> },
+        { id: "visits", label: "Doctor Visits", icon: <Stethoscope size={18} strokeWidth={2.25} /> },
+      ];
 
   const ROLE_ICON = { admin: <Shield size={13} />, user: <UserIcon size={13} />, patient: <Heart size={13} /> };
 
@@ -557,32 +750,66 @@ function MainApp() {
         </div>
       </header>
 
-      {/* Journal hero button — shows for patient role or all users */}
-      {isPatient && (
-        <button
-          className={`btn-journal-hero ${tab === "journal" ? "active" : ""}`}
-          onClick={() => { setTab("journal"); if (!todayCheckedIn) setShowCheckIn(true); }}
-        >
-          <BookHeart size={22} />
-          <div className="journal-hero-text">
-            <span className="journal-hero-label">{todayCheckedIn ? "My Journal" : "Daily Check-In"}</span>
-            <span className="journal-hero-hint">{todayCheckedIn ? "View your journal and add notes" : "Tap here to check in and view Journal"}</span>
-          </div>
-        </button>
-      )}
-
-      <nav className="tabs">
-        {tabs.map((t) => (
-          <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
-            {t.icon} {t.label}
-          </button>
-        ))}
-      </nav>
-
       <main className="content">
-        {/* ── Notes / Timeline ──────────────── */}
-        {tab === "timeline" && (
-          <div>
+        {isPatient && !todayCheckedIn && showCheckIn && (
+          <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowCheckIn(false); }}>
+            <div className="modal-content">
+              <div className="checkin-card">
+                <div className="checkin-section">
+                  <h3 className="checkin-question">How are you feeling <em>mentally</em> today?</h3>
+                  <div className="rating-row">
+                    {[1,2,3,4,5,6,7].map((n) => (
+                      <button key={n} type="button" className={`rating-btn ${mentalRating === n ? "active" : ""}`} onClick={() => setMentalRating(n)}>{n}</button>
+                    ))}
+                  </div>
+                  <div className="rating-labels"><span>Not great</span><span>Great</span></div>
+                  <div className="checkin-tags">
+                    {["Happy","Normal","Calm","Confused","Foggy","Anxious","Sad","Irritable","Forgetful","Restless","Hopeful","Overwhelmed"].map((t) => (
+                      <button key={t} type="button" className={`checkin-tag ${mentalTags.includes(t) ? "active" : ""}`} onClick={() => toggleTag(mentalTags, setMentalTags, t)}>{t}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="checkin-divider" />
+                <div className="checkin-section">
+                  <h3 className="checkin-question">How are you feeling <em>physically</em> today?</h3>
+                  <div className="rating-row">
+                    {[1,2,3,4,5,6,7].map((n) => (
+                      <button key={n} type="button" className={`rating-btn ${physicalRating === n ? "active" : ""}`} onClick={() => setPhysicalRating(n)}>{n}</button>
+                    ))}
+                  </div>
+                  <div className="rating-labels"><span>Not great</span><span>Great</span></div>
+                  <div className="checkin-tags">
+                    {["Normal","Strong","Weak","Achy","Stiff","Tired","Energetic","Dizzy","Nauseous","Shaky","Well-Rested","Sore"].map((t) => (
+                      <button key={t} type="button" className={`checkin-tag ${physicalTags.includes(t) ? "active" : ""}`} onClick={() => toggleTag(physicalTags, setPhysicalTags, t)}>{t}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="checkin-divider" />
+                <div className="checkin-section">
+                  <h3 className="checkin-question">Anything else on your mind?</h3>
+                  <textarea placeholder="Write whatever you'd like..." value={journalText} onChange={(e) => setJournalText(e.target.value)} rows={4} />
+                </div>
+                <div className="checkin-actions">
+                  <button type="button" className="chip" onClick={() => setShowCheckIn(false)}>Cancel</button>
+                  <button type="button" className="btn-primary btn-checkin-save" onClick={submitCheckIn} disabled={loading || (!mentalRating && !physicalRating && !journalText.trim())}>
+                    {loading ? <Loader2 size={16} className="spin" /> : <Send size={16} />}
+                    Save Check-In
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="app-top-shell">
+          <nav className="tabs">
+            {tabs.map((t) => (
+              <button key={t.id} type="button" className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </nav>
+          {tab === "timeline" && (
             <div className="entry-section">
               <p className="entry-as-label">New entry as <strong className="entry-as-name">{user.display_name}</strong></p>
               <textarea
@@ -600,6 +827,7 @@ function MainApp() {
                     return (
                       <button
                         key={name}
+                        type="button"
                         className={`reporter-filter-chip ${isActive ? "active" : ""}`}
                         onClick={() => setFilterReporters(isActive ? filterReporters.filter((r) => r !== name) : [...filterReporters, name])}
                         style={isActive ? { background: `rgba(${pal.rgb},0.15)`, color: pal.accent, borderColor: `rgba(${pal.rgb},0.3)` } : undefined}
@@ -610,7 +838,7 @@ function MainApp() {
                     );
                   })}
                 </div>
-                <button className="btn-primary" onClick={() => submitEntry(rawText)} disabled={loading}>
+                <button type="button" className="btn-primary" onClick={() => submitEntry(rawText)} disabled={loading}>
                   {loading ? <Loader2 size={14} className="spin" /> : <Send size={14} />}
                   Save entry
                 </button>
@@ -620,8 +848,12 @@ function MainApp() {
                 {filterCategory && <> in <CategoryTag category={filterCategory} onClick={() => setFilterCategory(null)} active /></>}
               </div>
             </div>
+          )}
+        </div>
 
-            <div className="timeline">
+        {/* ── Notes / Timeline ──────────────── */}
+        {tab === "timeline" && (
+          <div className="timeline">
               {Object.keys(groupedEntries).length === 0 && !filterCategory && (
                 <div className="empty-state">
                   <CalendarDays size={48} className="empty-state-icon" />
@@ -671,83 +903,48 @@ function MainApp() {
                   ))}
                 </div>
               ))}
-            </div>
           </div>
         )}
 
         {/* ── Journal (patient) ────────────── */}
         {tab === "journal" && isPatient && (
           <div>
-            {!todayCheckedIn && !showCheckIn && (
-              <button className="btn-checkin" onClick={() => setShowCheckIn(true)}>
-                <BookHeart size={28} />
-                <span className="btn-checkin-label">Daily Check-In</span>
-                <span className="btn-checkin-hint">Tap here to check in and view Journal</span>
-              </button>
-            )}
-
-            {!todayCheckedIn && showCheckIn && (
-              <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowCheckIn(false); }}>
-                <div className="modal-content">
-                  <div className="checkin-card">
-                    <div className="checkin-section">
-                      <h3 className="checkin-question">How are you feeling <em>mentally</em> today?</h3>
-                      <div className="rating-row">
-                        {[1,2,3,4,5,6,7].map((n) => (
-                          <button key={n} className={`rating-btn ${mentalRating === n ? "active" : ""}`} onClick={() => setMentalRating(n)}>{n}</button>
-                        ))}
-                      </div>
-                      <div className="rating-labels"><span>Not great</span><span>Great</span></div>
-                      <div className="checkin-tags">
-                        {["Happy","Normal","Calm","Confused","Foggy","Anxious","Sad","Irritable","Forgetful","Restless","Hopeful","Overwhelmed"].map((t) => (
-                          <button key={t} className={`checkin-tag ${mentalTags.includes(t) ? "active" : ""}`} onClick={() => toggleTag(mentalTags, setMentalTags, t)}>{t}</button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="checkin-divider" />
-                    <div className="checkin-section">
-                      <h3 className="checkin-question">How are you feeling <em>physically</em> today?</h3>
-                      <div className="rating-row">
-                        {[1,2,3,4,5,6,7].map((n) => (
-                          <button key={n} className={`rating-btn ${physicalRating === n ? "active" : ""}`} onClick={() => setPhysicalRating(n)}>{n}</button>
-                        ))}
-                      </div>
-                      <div className="rating-labels"><span>Not great</span><span>Great</span></div>
-                      <div className="checkin-tags">
-                        {["Normal","Strong","Weak","Achy","Stiff","Tired","Energetic","Dizzy","Nauseous","Shaky","Well-Rested","Sore"].map((t) => (
-                          <button key={t} className={`checkin-tag ${physicalTags.includes(t) ? "active" : ""}`} onClick={() => toggleTag(physicalTags, setPhysicalTags, t)}>{t}</button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="checkin-divider" />
-                    <div className="checkin-section">
-                      <h3 className="checkin-question">Anything else on your mind?</h3>
-                      <textarea placeholder="Write whatever you'd like..." value={journalText} onChange={(e) => setJournalText(e.target.value)} rows={4} />
-                    </div>
-                    <div className="checkin-actions">
-                      <button className="chip" onClick={() => setShowCheckIn(false)}>Cancel</button>
-                      <button className="btn-primary btn-checkin-save" onClick={submitCheckIn} disabled={loading || (!mentalRating && !physicalRating && !journalText.trim())}>
-                        {loading ? <Loader2 size={16} className="spin" /> : <Send size={16} />}
-                        Save Check-In
-                      </button>
-                    </div>
-                  </div>
+            {!todayCheckedIn && (
+              <div className="my-journal-toolbar">
+                <div className="my-journal-toolbar-left">
+                  <button type="button" className="btn-daily-checkin-cta btn-daily-checkin-cta--toolbar" onClick={() => setShowCheckIn(true)}>
+                    <BookHeart size={22} strokeWidth={2.25} className="btn-daily-checkin-cta-icon" />
+                    <span className="toolbar-cta-text">
+                      <span className="btn-daily-checkin-cta-label">Daily Check-In</span>
+                      <span className="btn-daily-checkin-cta-hint">Tap to record how you&rsquo;re feeling today</span>
+                    </span>
+                  </button>
+                </div>
+                <div className="my-journal-toolbar-right">
+                  {renderJournalPrivacyCluster()}
                 </div>
               </div>
             )}
 
             {todayCheckedIn && !showQuickCheckIn && (
-              <div className="card">
-                <h3>Add a note</h3>
-                <p className="hint">Write anything on your mind — it&rsquo;ll be added to your journal.</p>
+              <div className="card journal-add-note-card">
+                <div className="journal-add-note-header">
+                  <div className="journal-add-note-header-text">
+                    <h3>Add a note</h3>
+                    <p className="hint">Write anything on your mind — it&rsquo;ll be added to your journal.</p>
+                  </div>
+                  <div className="journal-add-note-header-privacy">
+                    {renderJournalPrivacyCluster()}
+                  </div>
+                </div>
                 <textarea placeholder="I'm feeling... (Enter to save, Shift+Enter for new line)" value={journalText} onChange={(e) => setJournalText(e.target.value)} onKeyDown={(e) => handleTextareaKeyDown(e, journalText)} rows={4} />
-                <div className="form-actions">
-                  <button className="btn-primary" onClick={() => submitEntry(journalText)} disabled={loading}>
-                    {loading ? <Loader2 size={14} className="spin" /> : <Send size={14} />}
-                    Save to journal
+                <div className="form-actions form-actions-journal-pair">
+                  <button type="button" className="btn-primary btn-journal-action-size" onClick={() => submitEntry(journalText)} disabled={loading}>
+                    {loading ? <Loader2 size={18} className="spin" /> : <Send size={18} strokeWidth={2.25} />}
+                    Save to Journal
                   </button>
-                  <button className="chip" onClick={() => setShowQuickCheckIn(true)}>
-                    <ClipboardList size={14} /> Clickable Entry
+                  <button type="button" className="btn-quick-click-entry btn-journal-action-size" onClick={() => setShowQuickCheckIn(true)}>
+                    <ClipboardList size={18} strokeWidth={2.25} /> Quick Click Entry
                   </button>
                 </div>
               </div>
@@ -930,10 +1127,6 @@ function MainApp() {
         {/* ── Summary ──────────────────────── */}
         {tab === "summary" && (
           <div>
-            <div className="stats-grid">
-              <div className="stat-card"><p className="stat-label">Total entries</p><p className="stat-value">{entries.length}</p></div>
-              <div className="stat-card"><p className="stat-label">Reporters</p><p className="stat-value">{allReporters.length}</p></div>
-            </div>
             <div className="card">
               <div className="summary-controls">
                 <div className="summary-control-group">
@@ -947,17 +1140,33 @@ function MainApp() {
                 <div className="summary-control-group">
                   <p className="form-label">Length</p>
                   <div className="length-toggle">
-                    <button className={`length-btn ${summaryLength === "short" ? "active" : ""}`} onClick={() => setSummaryLength("short")}>Short</button>
-                    <button className={`length-btn ${summaryLength === "long" ? "active" : ""}`} onClick={() => setSummaryLength("long")}>Detailed</button>
+                    <button type="button" className={`length-btn ${summaryLength === "short" ? "active" : ""}`} onClick={() => setSummaryLength("short")}>Short</button>
+                    <button type="button" className={`length-btn ${summaryLength === "long" ? "active" : ""}`} onClick={() => setSummaryLength("long")}>Detailed</button>
                   </div>
                 </div>
-                <div className="summary-control-group summary-control-btn">
-                  <p className="form-label">&nbsp;</p>
-                  <button className="btn-primary" onClick={getSummary} disabled={loading}>
+              </div>
+              <div className="summary-date-hint-block">
+                <p className="form-label summary-date-hint-label">Or describe the range</p>
+                <div className="summary-date-hint-row">
+                  <input
+                    type="text"
+                    className="summary-date-hint-input"
+                    value={recapDatePhrase}
+                    onChange={(e) => { setRecapDatePhrase(e.target.value); if (recapDateFeedback) setRecapDateFeedback(""); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        submitRecapWithPhrase();
+                      }
+                    }}
+                    placeholder="e.g. show me info for the last week"
+                  />
+                  <button type="button" className="btn-primary summary-date-hint-btn" onClick={submitRecapWithPhrase} disabled={loading}>
                     {loading ? <Loader2 size={14} className="spin" /> : <FileText size={14} />}
                     Generate
                   </button>
                 </div>
+                {recapDateFeedback && <p className="hint summary-date-hint-feedback">{recapDateFeedback}</p>}
               </div>
             </div>
             {summary && (
