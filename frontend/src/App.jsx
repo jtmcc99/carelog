@@ -325,6 +325,8 @@ function MainApp() {
 
   const [tab, setTab] = useState(() => (user.role === "patient" ? "journal" : "timeline"));
   const [entries, setEntries] = useState([]);
+  /** Avoid flashing Daily Check-In before /entries returns (empty array looks like "not checked in"). */
+  const [entriesLoaded, setEntriesLoaded] = useState(false);
   const [allReporters, setAllReporters] = useState([]);
   const [rawText, setRawText] = useState("");
   const [journalText, setJournalText] = useState("");
@@ -373,8 +375,24 @@ function MainApp() {
   const hdrs = useMemo(() => authHeaders(token), [token]);
 
   useEffect(() => {
-    fetch(`${API}/entries`, { headers: hdrs }).then((r) => r.ok ? r.json() : []).then(setEntries).catch(console.error);
-    fetch(`${API}/visits`, { headers: hdrs }).then((r) => r.ok ? r.json() : []).then(setVisits).catch(console.error);
+    let cancelled = false;
+    setEntriesLoaded(false);
+    fetch(`${API}/entries`, { headers: hdrs })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (!cancelled) setEntries(data);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!cancelled) setEntries([]);
+      })
+      .finally(() => {
+        if (!cancelled) setEntriesLoaded(true);
+      });
+    fetch(`${API}/visits`, { headers: hdrs }).then((r) => (r.ok ? r.json() : [])).then(setVisits).catch(console.error);
+    return () => {
+      cancelled = true;
+    };
   }, [hdrs]);
 
   useEffect(() => {
@@ -909,7 +927,13 @@ function MainApp() {
         {/* ── Journal (patient) ────────────── */}
         {tab === "journal" && isPatient && (
           <div>
-            {!todayCheckedIn && (
+            {!entriesLoaded && (
+              <div className="my-journal-toolbar my-journal-toolbar--loading" aria-busy="true" aria-live="polite">
+                <Loader2 size={20} className="spin" aria-hidden />
+                <span className="hint">Loading journal…</span>
+              </div>
+            )}
+            {entriesLoaded && !todayCheckedIn && (
               <div className="my-journal-toolbar">
                 <div className="my-journal-toolbar-left">
                   <button type="button" className="btn-daily-checkin-cta btn-daily-checkin-cta--toolbar" onClick={() => setShowCheckIn(true)}>
@@ -926,7 +950,7 @@ function MainApp() {
               </div>
             )}
 
-            {todayCheckedIn && !showQuickCheckIn && (
+            {entriesLoaded && todayCheckedIn && !showQuickCheckIn && (
               <div className="card journal-add-note-card">
                 <div className="journal-add-note-header">
                   <div className="journal-add-note-header-text">
@@ -950,7 +974,7 @@ function MainApp() {
               </div>
             )}
 
-            {todayCheckedIn && showQuickCheckIn && (
+            {entriesLoaded && todayCheckedIn && showQuickCheckIn && (
               <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowQuickCheckIn(false); setMentalRating(null); setMentalTags([]); setPhysicalRating(null); setPhysicalTags([]); } }}>
                 <div className="modal-content">
                   <div className="checkin-card">
@@ -1002,7 +1026,11 @@ function MainApp() {
 
             <h3 className="section-title">Your entries</h3>
             <div className="journal-timeline">
-              {patientEntries.length === 0 ? (
+              {!entriesLoaded ? (
+                <p className="hint journal-entries-loading">
+                  <Loader2 size={16} className="spin" aria-hidden /> Loading…
+                </p>
+              ) : patientEntries.length === 0 ? (
                 <p className="hint">No journal entries yet.</p>
               ) : (
                 patientEntries.map((e, i) => (

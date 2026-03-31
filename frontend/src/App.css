@@ -1320,6 +1320,20 @@ h3 {
   margin-left: auto;
 }
 
+.my-journal-toolbar--loading {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  color: var(--muted, #64748b);
+}
+
+.journal-entries-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .journal-privacy-cluster {
   display: flex;
   align-items: flex-start;
