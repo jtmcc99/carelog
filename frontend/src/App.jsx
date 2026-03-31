@@ -290,14 +290,53 @@ function App() {
     setCircle(newCircle);
   };
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem("carelog-token");
     localStorage.removeItem("carelog-user");
     localStorage.removeItem("carelog-circle");
     setToken(null);
     setUser(null);
     setCircle(null);
-  };
+  }, []);
+
+  /** Sync user + circle from server so localStorage (e.g. old patient_name / display_name) cannot go stale after DB migrations. */
+  useEffect(() => {
+    if (!token) return undefined;
+    let cancelled = false;
+    fetch(`${API}/auth/me`, { headers: authHeaders(token) })
+      .then((res) => {
+        if (res.status === 401) {
+          handleLogout();
+          return null;
+        }
+        return res.ok ? res.json() : null;
+      })
+      .then((data) => {
+        if (!data || cancelled) return;
+        const { circle: nextCircle, ...rest } = data;
+        const nextUser = {
+          id: rest.id,
+          username: rest.username,
+          display_name: rest.display_name,
+          role: rest.role,
+          relationship: rest.relationship ?? "",
+          circle_id: rest.circle_id,
+          active: rest.active,
+          journal_public: rest.journal_public !== false,
+          created_at: rest.created_at ?? "",
+        };
+        setUser(nextUser);
+        setCircle(nextCircle ?? null);
+        localStorage.setItem("carelog-user", JSON.stringify(nextUser));
+        localStorage.setItem("carelog-circle", JSON.stringify(nextCircle ?? null));
+      })
+      .catch((err) => {
+        if (!cancelled) console.error(err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, handleLogout]);
 
   const updateUser = useCallback((partial) => {
     setUser((prev) => {

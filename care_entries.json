@@ -382,5 +382,33 @@
       "mood": "Overwhelmed and frustrated, then quiet looking at old photos",
       "cognition": "Got overwhelmed trying to help with cleaning"
     }
+  },
+  {
+    "timestamp": "2026-03-26",
+    "reporter": "Mom",
+    "raw_text": "Mark slept in but was in a good mood when he woke up. He didnt eat much all day but memory seemed good",
+    "categories": {
+      "mood": "was in a good mood when he woke up",
+      "cognition": "memory seemed good",
+      "meals": "didnt eat much all day",
+      "sleep": "slept in"
+    }
+  },
+  {
+    "timestamp": "2026-03-26",
+    "reporter": "Jack",
+    "raw_text": "Talked to dad earlier. He seemed ok but a little confused",
+    "categories": {
+      "cognition": "a little confused"
+    }
+  },
+  {
+    "timestamp": "2026-03-30",
+    "reporter": "Patient",
+    "raw_text": "Daily Check-In:\nMental: 3/7\nPhysical: 5/7\nFeeling good",
+    "categories": {
+      "mood": "Mental: 3/7, Feeling good",
+      "physical_activity": "Physical: 5/7"
+    }
   }
 ]

@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +37,8 @@ def ensure_journal_public_column():
 
 ensure_journal_public_column()
 
+_log = logging.getLogger("carelog.api")
+
 
 def ensure_demo_booboo_branding():
     """Legacy demo used patient_name/display_name 'Margaret'; rebrand to Booboo for the demo circle."""
@@ -61,6 +64,7 @@ def ensure_demo_booboo_branding():
         db.commit()
     except Exception:
         db.rollback()
+        _log.exception("ensure_demo_booboo_branding failed")
     finally:
         db.close()
 
