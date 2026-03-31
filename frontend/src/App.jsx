@@ -28,6 +28,44 @@ import "./App.css";
 
 const API = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000/api`;
 
+/** Prod DB sometimes still has "Margaret" for the demo patient; Railway may not run latest API migrations. */
+const DEMO_BOOBOO_USERNAME = "demo_booboo";
+const DEMO_PATIENT_UI_NAME = "Booboo";
+
+function isDemoBoobooUser(u) {
+  return u?.username === DEMO_BOOBOO_USERNAME;
+}
+
+/** Thread title: demo accounts in the legacy Margaret circle see Booboo. */
+function uiPatientName(circle, user) {
+  if (user?.username?.startsWith("demo_") && circle?.patient_name === "Margaret") {
+    return DEMO_PATIENT_UI_NAME;
+  }
+  return circle?.patient_name || "your patient";
+}
+
+/** Badge / "new entry as" for demo patient only. */
+function uiDisplayName(user) {
+  if (isDemoBoobooUser(user)) return DEMO_PATIENT_UI_NAME;
+  return user.display_name;
+}
+
+/** Journal + check-in rows may still be stored as reporter Margaret. */
+function patientEntryReporterMatches(user, reporter) {
+  if (!isDemoBoobooUser(user)) {
+    return reporter.toLowerCase() === user.display_name.toLowerCase();
+  }
+  const r = reporter;
+  const dn = (user.display_name || "").toLowerCase();
+  return r === "Booboo" || r === "Margaret" || r.toLowerCase() === dn;
+}
+
+function entryShowsSelfReportBadge(entry, patientNameUi) {
+  if (["Dad", "Patient"].includes(entry.reporter)) return true;
+  if (entry.reporter === patientNameUi) return true;
+  return patientNameUi === DEMO_PATIENT_UI_NAME && entry.reporter === "Margaret";
+}
+
 /* ── Auth Context ────────────────────────── */
 
 const AuthContext = createContext(null);
@@ -360,7 +398,8 @@ function MainApp() {
   const { token, user, circle, logout, updateUser } = useAuth();
   const isAdmin = user.role === "admin";
   const isPatient = user.role === "patient";
-  const patientName = circle?.patient_name || "your patient";
+  const patientName = uiPatientName(circle, user);
+  const displayNameUi = uiDisplayName(user);
 
   const [tab, setTab] = useState(() => (user.role === "patient" ? "journal" : "timeline"));
   const [entries, setEntries] = useState([]);
@@ -459,8 +498,8 @@ function MainApp() {
   }, [journalPrivacyInfoOpen]);
 
   const activeColor = useMemo(
-    () => getReporterColor(user.display_name, allReporters),
-    [user.display_name, allReporters]
+    () => getReporterColor(displayNameUi, allReporters),
+    [displayNameUi, allReporters]
   );
 
   const accentStyle = useMemo(() => ({}), []);
@@ -711,7 +750,7 @@ function MainApp() {
     : 0;
 
   const patientEntries = entries
-    .filter((e) => e.reporter.toLowerCase() === user.display_name.toLowerCase() && isPatient)
+    .filter((e) => patientEntryReporterMatches(user, e.reporter) && isPatient)
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 
   const now = new Date();
@@ -720,7 +759,10 @@ function MainApp() {
   if (now < checkinCutoff) checkinCutoff.setDate(checkinCutoff.getDate() - 1);
   const todayStr = checkinCutoff.toISOString().slice(0, 10);
   const todayCheckedIn = entries.some(
-    (e) => e.timestamp >= todayStr && e.reporter === user.display_name && e.raw_text.startsWith("Daily Check-In:")
+    (e) =>
+      e.timestamp >= todayStr &&
+      patientEntryReporterMatches(user, e.reporter) &&
+      e.raw_text.startsWith("Daily Check-In:")
   );
 
   const renderJournalPrivacyCluster = () => (
@@ -796,7 +838,7 @@ function MainApp() {
         <div className="header-right">
           <span className="user-badge">
             {ROLE_ICON[user.role]}
-            {user.display_name}
+            {displayNameUi}
           </span>
           {isAdmin && (
             <button className="btn-icon" onClick={() => setTab("settings")} title="Settings">
@@ -868,7 +910,7 @@ function MainApp() {
           </nav>
           {tab === "timeline" && (
             <div className="entry-section">
-              <p className="entry-as-label">New entry as <strong className="entry-as-name">{user.display_name}</strong></p>
+              <p className="entry-as-label">New entry as <strong className="entry-as-name">{displayNameUi}</strong></p>
               <textarea
                 placeholder="Describe what happened in plain language... (Enter to save, Shift+Enter for new line)"
                 value={rawText}
@@ -936,7 +978,7 @@ function MainApp() {
                         <div className="timeline-header">
                           <div className="reporter-name">
                             {entry.reporter}
-                            {["Dad", "Patient", patientName].includes(entry.reporter) && (
+                            {entryShowsSelfReportBadge(entry, patientName) && (
                               <span className="self-report-badge">self-report</span>
                             )}
                           </div>
