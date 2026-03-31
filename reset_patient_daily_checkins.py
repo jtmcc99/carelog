@@ -1,8 +1,11 @@
 """Remove Daily Check-In entries for all patient accounts (per circle + reporter).
 
-Run from repo root:
+Run from repo root (needs DATABASE_URL reachable from your machine; Railway internal URLs will not work locally):
   python3 reset_patient_daily_checkins.py
   python3 reset_patient_daily_checkins.py --username demo_booboo
+
+Production / QA: use admin API after Railway deploy — POST /api/admin/reset-patient-daily-checkins
+with JSON {"username":"demo_booboo"} and Authorization: Bearer <demo_admin token>.
 """
 import argparse
 
