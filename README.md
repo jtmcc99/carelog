@@ -1,5 +1,8 @@
 # CareLog: Multi-Perspective Care Tracking for Dementia Patients
 
+<!-- Screenshot: main dashboard showing care log entries from multiple reporters -->
+<!-- TODO: Add screenshot of the care log view showing entries from different family members -->
+
 ## The Problem
 
 Dementia patients often give **confident but inaccurate answers** to medical questions. When a doctor asks "Have you fallen this week?" or "Have you been confused?", a patient with memory issues may genuinely believe they're fine — even when caregivers have observed otherwise.
@@ -10,15 +13,25 @@ Family members who try to correct the record in the room face an uncomfortable s
 
 ## How It Works
 
-CareLog is a terminal-based care logging tool powered by Claude (Anthropic's AI). It does four things:
+CareLog is a full-stack web application powered by Claude (Anthropic's AI). Each member of a care circle — the patient, their family, and their professional caregivers — logs in and contributes to a shared record.
 
-1. **Natural language logging**: Caregivers describe what happened in plain language. No forms, no dropdowns. The AI automatically parses entries into structured categories (mood, cognition, medication, meals, sleep, incidents, etc.)
+### Natural Language Logging
+Caregivers describe what happened in plain language. No forms, no dropdowns. Claude automatically parses entries into structured categories (mood, cognition, medication, meals, sleep, incidents, etc.) and extracts the correct date — even from entries like "last Tuesday Dad had a fall."
 
-2. **Multi-perspective capture**: Each entry is tagged with who reported it and when. The patient's own self-reports are recorded alongside family and professional observations — without overwriting or contradicting anyone.
+### Multi-Perspective Capture
+Each entry is tagged with who reported it and when. The patient's own self-reports are recorded alongside family and professional observations — without overwriting or contradicting anyone.
 
-3. **Smart date extraction**: Entries like "last Tuesday Dad had a fall" are automatically filed under the correct date, not the date of reporting.
+### Patient Journal
+The patient gets their own private space to record how they're feeling in their own words. Journal visibility is controlled by the patient — they can choose to share entries with their care circle or keep them private.
 
-4. **AI-powered querying and summaries**: Ask questions like "Where do Dad's self-reports differ from what others observed?" and get a synthesized answer citing who said what. Generate doctor-visit-ready briefings that highlight patterns and discrepancies.
+### Doctor Visit Summaries
+Generate structured briefings for doctor appointments that highlight patterns and discrepancies across reporters. Summaries are available in two lengths: a quick paragraph for a busy appointment or a detailed section-by-section briefing.
+
+### Doctor Visit Processing
+After an appointment, paste in your notes or transcript. Claude extracts the doctor's name, date, key takeaways, and medication changes — building a searchable history of visits over time.
+
+### AI-Powered Q&A
+Ask questions like "Where do Dad's self-reports differ from what others observed?" and get a synthesized answer citing who said what and when.
 
 ## Why This Matters
 
@@ -33,33 +46,46 @@ This changes the quality of a 15-minute appointment dramatically.
 
 ## Design Principles
 
-- **Dignity-first**: The patient is a participant, not a subject. Their perspective is recorded and valued, not overridden.
+- **Dignity-first**: The patient is a participant, not a subject. Their perspective is recorded and valued, not overridden. They control their own journal privacy.
 - **No wrong answers**: Conflicting reports aren't errors — they're data. The system presents all perspectives without picking sides.
 - **Effortless input**: If it's harder than sending a text message, caregivers won't use it. Natural language input removes all friction.
 
-## Example: Doctor Visit Summary
+## Tech Stack
 
-When you run the `summary` command, CareLog generates a structured briefing like this:
+- **Backend**: FastAPI (Python) with Anthropic Claude API
+- **Frontend**: React 19 with Vite
+- **Database**: PostgreSQL via SQLAlchemy (SQLite for local dev)
+- **Auth**: JWT-based authentication with role-based access (admin, caregiver, patient)
+- **RAG**: ChromaDB vector database for semantic search over care entries (used in Streamlit prototype; the production web app queries the SQL database directly within Claude's context window)
+
+## Architecture
 
 ```
-PATIENT OVERVIEW
-Mark experienced significant mood and cognitive fluctuations, with reports
-ranging from "sharp memory" in the morning to being "very confused" by afternoon.
-
-NOTABLE DISCREPANCIES
-Patient self-reported "feeling fine" and "everything normal," while Mom
-simultaneously reported he was "extra forgetful." This suggests possible
-lack of awareness of cognitive difficulties.
-
-QUESTIONS FOR THE DOCTOR
-1. What could cause such rapid cognitive fluctuations within a single day?
-2. How significant is it that Mark doesn't seem aware of his memory problems?
+React Frontend (login, care log, journal, summaries, visits, admin)
+    |
+    v
+FastAPI Backend (JWT auth, role-based access)
+    |
+    ├── Claude API (parse entries, generate summaries, answer questions, process visits)
+    |
+    └── PostgreSQL / SQLAlchemy (entries, users, care circles, visits, changelog)
 ```
+
+### Care Circle Model
+
+Each deployment centers around a **care circle** — one patient and the people who care for them. Users have roles:
+
+| Role | Can do |
+|------|--------|
+| **Patient** | Log entries, write private journal, control journal visibility, view summaries |
+| **Caregiver** | Log entries, view all entries, generate summaries, ask questions, record visits |
+| **Admin** | All of the above + manage users, view changelog, delete entries |
 
 ## Setup
 
 ### Prerequisites
 - Python 3.9+
+- Node.js 20+
 - An Anthropic API key ([get one here](https://console.anthropic.com))
 
 ### Installation
@@ -67,54 +93,37 @@ QUESTIONS FOR THE DOCTOR
 ```bash
 git clone https://github.com/jtmcc17-boop/carelog.git
 cd carelog
+
+# Backend
 python3 -m venv venv
 source venv/bin/activate
-pip install anthropic
+pip install -r requirements.txt
 export ANTHROPIC_API_KEY="your-api-key"
+
+# Frontend
+cd frontend
+npm install
 ```
 
 ### Run
 
 ```bash
-python3 carelog.py
-```
+# Terminal 1: Backend
+source venv/bin/activate
+uvicorn api:app --reload
 
-## Commands
-
-| Command   | What it does |
-|-----------|-------------|
-| `log`     | Add a new entry. Say who you are and describe what happened in plain language. |
-| `view`    | See the 5 most recent entries with parsed categories. |
-| `summary` | Generate a doctor-visit-ready briefing from all entries. |
-| `ask`     | Ask any question about the care log. Claude answers using only logged data. |
-| `quit`    | Exit the program. |
-
-## Architecture
-
-```
-User input (natural language)
-    |
-    v
-Claude API (parse into structured categories + extract date)
-    |
-    v
-JSON file storage (care_entries.json)
-    |
-    v
-Claude API (query/summarize across all entries)
-    |
-    v
-Synthesized answer with multi-perspective attribution
+# Terminal 2: Frontend
+cd frontend
+npm run dev
 ```
 
 ## What's Next
 
-- [ ] Web interface (Streamlit) for non-technical caregivers
-- [ ] RAG pipeline for handling months of entries beyond context window limits
 - [ ] Pattern detection: automatic alerts for trends (increasing confusion, missed medications)
 - [ ] Voice input for hands-free logging
-- [ ] Multi-patient support
+- [ ] Multi-care-circle support per account
 - [ ] Export summaries as PDF for doctor visits
+- [ ] Push notifications for care circle updates
 
 ## Background
 
