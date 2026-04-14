@@ -1,7 +1,6 @@
 # CareLog: Multi-Perspective Care Tracking for Dementia Patients
 
-<!-- Screenshot: main dashboard showing care log entries from multiple reporters -->
-<!-- TODO: Add screenshot of the care log view showing entries from different family members -->
+![CareLog entries view — multi-perspective care logging with natural language input](docs/carelog-entries.png)
 
 ## The Problem
 
