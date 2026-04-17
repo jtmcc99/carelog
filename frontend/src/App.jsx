@@ -259,7 +259,7 @@ function LoginPage({ onLogin }) {
         throw new Error(data.detail || "Login failed");
       }
       const data = await res.json();
-      onLogin(data.token, data.user, data.circle);
+      onLogin(data.token, data.user, data.circle, data.shared_journal_enabled);
     } catch (err) {
       setError(err.message);
     }
@@ -377,13 +377,16 @@ function App() {
     try { return JSON.parse(localStorage.getItem("carelog-circle")); } catch { return null; }
   });
 
-  const handleLogin = (newToken, newUser, newCircle) => {
+  const handleLogin = (newToken, newUser, newCircle, sharedJournalEnabled) => {
+    const circleWithJournal = newCircle
+      ? { ...newCircle, shared_journal_enabled: sharedJournalEnabled === true }
+      : null;
     localStorage.setItem("carelog-token", newToken);
     localStorage.setItem("carelog-user", JSON.stringify(newUser));
-    localStorage.setItem("carelog-circle", JSON.stringify(newCircle));
+    localStorage.setItem("carelog-circle", JSON.stringify(circleWithJournal));
     setToken(newToken);
     setUser(newUser);
-    setCircle(newCircle);
+    setCircle(circleWithJournal);
   };
 
   const handleLogout = useCallback(() => {
@@ -409,7 +412,7 @@ function App() {
       })
       .then((data) => {
         if (!data || cancelled) return;
-        const { circle: nextCircle, ...rest } = data;
+        const { circle: nextCircle, shared_journal_enabled: sharedJournalEnabled, ...rest } = data;
         const nextUser = {
           id: rest.id,
           username: rest.username,
@@ -422,9 +425,12 @@ function App() {
           created_at: rest.created_at ?? "",
         };
         setUser(nextUser);
-        setCircle(nextCircle ?? null);
+        const mergedCircle = nextCircle
+          ? { ...nextCircle, shared_journal_enabled: sharedJournalEnabled === true }
+          : null;
+        setCircle(mergedCircle);
         localStorage.setItem("carelog-user", JSON.stringify(nextUser));
-        localStorage.setItem("carelog-circle", JSON.stringify(nextCircle ?? null));
+        localStorage.setItem("carelog-circle", JSON.stringify(mergedCircle));
       })
       .catch((err) => {
         if (!cancelled) console.error(err);
@@ -456,6 +462,7 @@ function MainApp() {
   const { token, user, circle, logout, updateUser } = useAuth();
   const isAdmin = user.role === "admin";
   const isPatient = user.role === "patient";
+  const sharedJournalEnabled = !isPatient && circle?.shared_journal_enabled === true;
   const patientName = uiPatientName(circle, user);
   const displayNameUi = uiDisplayName(user);
 
@@ -610,6 +617,7 @@ function MainApp() {
       }
       const u = await res.json();
       updateUser({ journal_public: u.journal_public });
+      setCircle((prev) => (prev ? { ...prev, shared_journal_enabled: u.journal_public === true } : prev));
     } catch (err) {
       console.error(err);
       alert(err.message || "Could not update journal visibility.");
@@ -664,7 +672,7 @@ function MainApp() {
     }
     if (journalText.trim()) parts.push(journalText.trim());
     if (!parts.length) return;
-    await submitEntry(`Daily Check-In:\n${parts.join("\n")}`);
+    await submitEntry(`Daily Check-In:\n${parts.join("\n")}`, { isJournal: true });
     setMentalRating(null);
     setMentalTags([]);
     setPhysicalRating(null);
@@ -818,7 +826,7 @@ function MainApp() {
   // ── Computed Data ─────────────────────────
 
   const filteredEntries = entries.filter((e) => {
-    if (e.is_journal) return false;
+    if (isJournalLikeEntry(e)) return false;
     if (filterReporters.length > 0 && !filterReporters.includes(e.reporter)) return false;
     if (filterCategory && !(e.categories && filterCategory in e.categories)) return false;
     return true;
@@ -835,11 +843,11 @@ function MainApp() {
     }, {});
 
   const filterCount = filterCategory
-    ? entries.filter((e) => !e.is_journal && e.categories && filterCategory in e.categories).length
+    ? entries.filter((e) => !isJournalLikeEntry(e) && e.categories && filterCategory in e.categories).length
     : 0;
 
-  const patientEntries = entries
-    .filter((e) => patientEntryReporterMatches(user, e.reporter) && isPatient)
+  const journalEntriesForViewer = entries
+    .filter((e) => isJournalLikeEntry(e) && (isPatient ? patientEntryReporterMatches(user, e.reporter) : true))
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 
   const now = new Date();
@@ -904,6 +912,7 @@ function MainApp() {
       ]
     : [
         { id: "timeline", label: "Thread", icon: <ClipboardList size={18} strokeWidth={2.25} /> },
+        ...(sharedJournalEnabled ? [{ id: "journal", label: "Journal", icon: <BookHeart size={18} strokeWidth={2.25} /> }] : []),
         { id: "summary", label: "Recap", icon: <FileText size={18} strokeWidth={2.25} /> },
         { id: "ask", label: "Ask Questions", icon: <Sparkles size={18} strokeWidth={2.25} /> },
         { id: "visits", label: "Doctor Visits", icon: <Stethoscope size={18} strokeWidth={2.25} /> },
@@ -1211,10 +1220,23 @@ function MainApp() {
                 <p className="hint journal-entries-loading">
                   <Loader2 size={16} className="spin" aria-hidden /> Loading…
                 </p>
-              ) : patientEntries.length === 0 ? (
+              ) : journalEntriesForViewer.length === 0 ? (
                 <p className="hint">No journal entries yet.</p>
               ) : (
-                patientEntries.map((e, i) => <PatientJournalListItem key={e.id || i} entry={e} />)
+                journalEntriesForViewer.map((e, i) => <PatientJournalListItem key={e.id || i} entry={e} />)
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === "journal" && !isPatient && sharedJournalEnabled && (
+          <div>
+            <h3 className="section-title">Patient journal</h3>
+            <div className="journal-timeline">
+              {journalEntriesForViewer.length === 0 ? (
+                <p className="hint">No shared journal entries yet.</p>
+              ) : (
+                journalEntriesForViewer.map((e, i) => <PatientJournalListItem key={e.id || i} entry={e} />)
               )}
             </div>
           </div>
@@ -1577,6 +1599,12 @@ function formatDate(dateStr) {
 }
 
 const DAILY_CHECKIN_PREFIX = "Daily Check-In:";
+
+function isJournalLikeEntry(entry) {
+  if (!entry) return false;
+  if (entry.is_journal === true) return true;
+  return typeof entry.raw_text === "string" && entry.raw_text.startsWith(DAILY_CHECKIN_PREFIX);
+}
 
 /** Parse structured Daily Check-In or Quick Check-In body; null = show as freeform entry. */
 function tryParseCheckInPayload(raw) {

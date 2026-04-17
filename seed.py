@@ -108,76 +108,172 @@ today = datetime.now().date()
 
 existing_entries = db.query(Entry).filter(Entry.circle_id == demo_circle.id).count()
 if existing_entries > 0:
-    print(f"\n  Demo entries already exist ({existing_entries}). Skipping.")
+    print(f"\n  Demo entries already exist ({existing_entries}). Will backfill missing history.")
 else:
-    demo_entries = [
-        (-14, "Linda", "Mom had a really good morning today. She was humming in the kitchen and even remembered to water her plants without me reminding her. She asked about the grandkids and what they were up to in school.", {"mood": "Good mood, humming and engaged", "cognition": "Remembered to water plants independently", "social": "Asked about grandchildren"}),
-        (-13, "Tom", "Visited Mom today. She seemed a bit confused about what day it was but once we got talking she was pretty sharp. We looked through old photos and she remembered most of the people. She did call me David a couple times (that's Dad's name).", {"cognition": "Confused about the day, called Tom by his father's name", "mood": "Engaged during photo activity", "social": "Enjoyed looking through old photos"}),
-        (-12, "Nurse Rachel", "Vitals normal. BP 128/82. Weight stable at 142 lbs. Margaret reports sleeping well. Noticed slight unsteadiness when she stood up from the chair — reminded her to use the grab bar. Medication compliance is good, pill organizer was correctly used.", {"medication": "Good compliance, pill organizer used correctly", "physical_activity": "Slight unsteadiness when standing, reminded about grab bar", "sleep": "Reports sleeping well"}),
-        (-11, "Booboo", "Daily Check-In:\nMental: 5/7\nFeeling: Normal, Calm\nPhysical: 4/7\nBody: Stiff, Achy\nKnees were bothering me again today. I sat in the garden for a while and that helped. Linda brought over soup for dinner which was nice.", {"mood": "Calm, normal", "physical_activity": "Knee pain, sat in garden", "meals": "Linda brought soup for dinner", "social": "Linda visited with soup"}),
-        (-10, "Sarah", "Called Mom this morning. She sounded good but told me she had already eaten breakfast, and then Linda told me she hadn't — she just forgot she hadn't eaten yet. I reminded Linda to keep an eye on that. Otherwise Mom said she slept great and was planning to watch her shows.", {"cognition": "Told Sarah she had eaten breakfast but hadn't", "meals": "May have skipped breakfast, needs monitoring", "sleep": "Reported sleeping well"}),
-        (-9, "Linda", "Rough morning. Margaret woke up disoriented and didn't recognize the bedroom for a few minutes. She was anxious until I turned on the lights and talked her through it. After about 20 minutes she was fine and ate a full breakfast. The rest of the day was normal.", {"cognition": "Woke up disoriented, didn't recognize bedroom", "mood": "Anxious upon waking, settled after 20 minutes", "meals": "Ate full breakfast after settling", "incidents": "Disorientation episode upon waking"}),
-        (-8, "Booboo", "Daily Check-In:\nMental: 4/7\nFeeling: Foggy, Confused\nPhysical: 5/7\nBody: Normal\nI don't remember what happened this morning too well. Linda says I was confused but I feel fine now. Watched my cooking show and made a grocery list.", {"mood": "Foggy and confused earlier, fine later", "cognition": "Doesn't remember morning disorientation episode"}),
-        (-7, "Nurse Rachel", "Weekly check-in. BP slightly elevated at 138/88 — will monitor. Margaret seemed in good spirits. She was telling me about a recipe she wanted to try. Gait is stable with her walker. Reviewed medications — all on track. Noted small bruise on left forearm, Linda says she bumped the kitchen counter.", {"medication": "All on track", "physical_activity": "Gait stable with walker", "incidents": "Small bruise on left forearm from bumping kitchen counter"}),
-        (-6, "Tom", "Took Mom to the park today. She loved it — was pointing out the birds and even remembered the name of that big oak tree we used to climb as kids. She got tired after about 30 minutes and we headed back. She napped for almost 2 hours after.", {"mood": "Loved the park, engaged and happy", "cognition": "Remembered childhood oak tree", "physical_activity": "Tired after 30 min walk, napped 2 hours", "social": "Enjoyed outing with Tom"}),
-        (-5, "Linda", "Margaret was a bit snappy today. She got frustrated when she couldn't find her reading glasses (they were on her head). She also refused to take her afternoon meds at first but eventually took them after I brought her some tea. I think she's just having an off day.", {"mood": "Irritable, frustrated about glasses", "cognition": "Couldn't find glasses that were on her head", "medication": "Initially refused afternoon meds, took them later with tea"}),
-        (-4, "Sarah", "Mom called me today which is unusual — she normally doesn't initiate calls. She wanted to tell me about a dream she had about Dad. She sounded a little sad but said talking about it made her feel better. She also asked me to bring her that lavender lotion she likes next time I visit.", {"mood": "Slightly sad, talking about deceased husband", "social": "Initiated phone call to Sarah, which is unusual", "cognition": "Remembered specific lotion preference"}),
-        (-3, "Booboo", "Daily Check-In:\nMental: 6/7\nFeeling: Happy, Hopeful\nPhysical: 5/7\nBody: Normal, Well-Rested\nI talked to Sarah yesterday and it made me feel good. Tom is coming over this weekend. I tried that new recipe for banana bread and it turned out pretty well. Linda helped a little.", {"mood": "Happy and hopeful", "social": "Looking forward to Tom's visit", "meals": "Made banana bread with Linda's help"}),
-        (-2, "Nurse Rachel", "Margaret in excellent spirits today. BP back to normal at 126/80. She proudly showed me the banana bread she made. Cognitively she seems sharp today — she recalled all her medications by name and knew what each one was for. Left forearm bruise is healing well.", {"medication": "Recalled all medications by name and purpose", "mood": "Excellent spirits, proud of baking", "physical_activity": "Bruise healing well"}),
-        (-1, "Linda", "Good day overall. Margaret and I did a jigsaw puzzle together and she was very focused. She did get a little mixed up about whether it was morning or afternoon around 3pm but corrected herself. Ate well — had oatmeal for breakfast, sandwich for lunch, and I made chicken and vegetables for dinner.", {"cognition": "Slight time confusion around 3pm, self-corrected", "social": "Did jigsaw puzzle together, very focused", "meals": "Ate three full meals"}),
-        (0, "Tom", "Spent the day with Mom. She was in a great mood and we watched old home movies. She remembered so many details — even the name of our dog from when I was a kid. She did ask where Dad was once, and when I reminded her she got quiet for a minute but then moved on. Overall a really nice day.", {"mood": "Great mood, got quiet when reminded about husband", "cognition": "Strong long-term memories, asked about deceased husband", "social": "Watched home movies together"}),
-    ]
+    print("\n  Demo entries missing. Creating initial sample rows.")
 
-    for days_ago, reporter, raw_text, categories in demo_entries:
-        entry_date = (today + timedelta(days=days_ago)).strftime("%Y-%m-%d")
-        user = demo_users[reporter]
+
+def add_demo_entries(rows):
+    existing_rows = db.query(Entry).filter(Entry.circle_id == demo_circle.id).all()
+    existing_keys = {(e.timestamp, e.reporter, e.raw_text) for e in existing_rows}
+    created = 0
+    for row in rows:
+        key = (row["timestamp"], row["reporter"], row["raw_text"])
+        if key in existing_keys:
+            continue
+        user = demo_users[row["reporter"]]
         entry = Entry(
             circle_id=demo_circle.id,
-            timestamp=entry_date,
-            reporter=reporter,
-            raw_text=raw_text,
-            categories=categories,
+            timestamp=row["timestamp"],
+            reporter=row["reporter"],
+            raw_text=row["raw_text"],
+            categories=row["categories"],
+            is_journal=row.get("is_journal", False),
             created_by=user.id,
         )
         db.add(entry)
+        existing_keys.add(key)
+        created += 1
+    if created:
+        db.commit()
+    return created
 
-    db.commit()
-    print(f"  Created {len(demo_entries)} demo entries.")
 
-existing_visits = db.query(Visit).filter(Visit.circle_id == demo_circle.id).count()
-if existing_visits > 0:
-    print(f"  Demo visits already exist ({existing_visits}). Skipping.")
-else:
-    demo_visits = [
-        {
-            "doctor_name": "Dr. Patel",
-            "date": (today - timedelta(days=10)).strftime("%Y-%m-%d"),
-            "transcript": "Routine check-up with Dr. Patel. Discussed Margaret's recent disorientation episodes. Doctor said occasional morning confusion is common at this stage and not alarming on its own, but to keep tracking frequency. Reviewed medications — no changes needed. Recommended continuing daily walks and social engagement. Follow up in 6 weeks.",
-            "key_takeaways": "• Morning disorientation episodes are within expected range but should be tracked\n• No medication changes\n• Continue daily walks and social activities\n• Follow-up appointment in 6 weeks\n• Call if disorientation episodes increase in frequency or duration",
-            "created_by": demo_users["Sarah"].id,
-        },
-        {
-            "doctor_name": "Dr. Nguyen",
-            "date": (today - timedelta(days=3)).strftime("%Y-%m-%d"),
-            "transcript": "Saw Dr. Nguyen (orthopedic) about Margaret's knee pain. X-rays show mild arthritis, nothing severe. Recommended glucosamine supplement and gentle stretching exercises. Said the walking is good but to limit it to 20-30 minutes at a time. Prescribed a topical anti-inflammatory cream for bad days. No need for follow-up unless pain worsens significantly.",
-            "key_takeaways": "• Mild knee arthritis confirmed on X-ray\n• Start glucosamine supplement daily\n• Gentle stretching exercises recommended\n• Limit walks to 20-30 minutes\n• Topical anti-inflammatory cream prescribed for flare-ups\n• No follow-up needed unless pain significantly worsens",
-            "created_by": demo_users["Linda"].id,
-        },
+if existing_entries == 0:
+    starter_entries = [
+        (-14, "Linda", "Booboo had a really good morning. She was humming in the kitchen and remembered to water her plants without reminders.", {"mood": "Good mood, humming and engaged", "cognition": "Remembered to water plants independently", "social": "Asked about grandchildren"}, False),
+        (-12, "Nurse Rachel", "Vitals normal. BP 128/82. Weight stable. Slight unsteadiness when standing from a chair, so we reviewed grab bar use.", {"medication": "Medication compliance remains good", "physical_activity": "Slight unsteadiness on standing", "sleep": "Reports sleeping well"}, False),
+        (-10, "Sarah", "Called Booboo this morning. She said she had breakfast, but Linda said she had not eaten yet and had forgotten.", {"cognition": "Conflicting memory about breakfast", "meals": "Needs meal reminders", "sleep": "Reported sleeping well"}, False),
+        (-8, "Booboo", "Daily Check-In:\nMental: 4/7\nFeeling: Foggy, Confused\nPhysical: 5/7\nBody: Normal\nI do not remember this morning very well but I feel calmer now.", {"mood": "Foggy and confused earlier, calmer later", "cognition": "Uncertain memory of morning"}, True),
+        (-5, "Tom", "Spent the afternoon at the park with Booboo. She enjoyed it but became tired after about 30 minutes.", {"mood": "Enjoyed outing", "physical_activity": "Fatigued after 30 minute walk", "social": "Positive time with family"}, False),
+        (-3, "Booboo", "Daily Check-In:\nMental: 6/7\nFeeling: Happy, Hopeful\nPhysical: 5/7\nBody: Normal\nTalking with Sarah yesterday made me feel better.", {"mood": "Happy and hopeful", "social": "Positive call with Sarah"}, True),
+        (-1, "Linda", "Good day overall. We did a jigsaw puzzle and she was focused. Slight time confusion around 3pm, then self-corrected.", {"cognition": "Brief time confusion with self-correction", "social": "Engaged in puzzle activity"}, False),
     ]
+    starter_rows = [
+        {
+            "timestamp": (today + timedelta(days=days_ago)).strftime("%Y-%m-%d"),
+            "reporter": reporter,
+            "raw_text": raw_text,
+            "categories": categories,
+            "is_journal": is_journal,
+        }
+        for days_ago, reporter, raw_text, categories, is_journal in starter_entries
+    ]
+    created = add_demo_entries(starter_rows)
+    print(f"  Created {created} initial demo entries.")
 
-    for v in demo_visits:
-        visit = Visit(
-            circle_id=demo_circle.id,
-            doctor_name=v["doctor_name"],
-            date=v["date"],
-            transcript=v["transcript"],
-            key_takeaways=v["key_takeaways"],
-            created_by=v["created_by"],
-        )
-        db.add(visit)
 
+weekly_templates = [
+    {
+        "reporter": "Linda",
+        "raw_text": "Weekly family note: Booboo was more engaged on {weekday}. We reviewed meals and she needed one reminder at dinner.",
+        "categories": {"mood": "Generally engaged and calm", "meals": "Needed one meal reminder", "social": "Spent structured time with Linda"},
+        "is_journal": False,
+    },
+    {
+        "reporter": "Tom",
+        "raw_text": "Visited Booboo and looked through old photos. She recalled several names but mixed up one timeline detail.",
+        "categories": {"cognition": "Mostly accurate recall with one mixed detail", "social": "Positive family visit"},
+        "is_journal": False,
+    },
+    {
+        "reporter": "Nurse Rachel",
+        "raw_text": "Home health check completed. Vitals stable, gait steady with walker, medications reviewed and on schedule.",
+        "categories": {"medication": "On schedule", "physical_activity": "Steady gait with walker", "other": "Routine nursing check"},
+        "is_journal": False,
+    },
+    {
+        "reporter": "Booboo",
+        "raw_text": "Daily Check-In:\nMental: 5/7\nFeeling: Calm, Hopeful\nPhysical: 5/7\nBody: Normal, Slightly Tired\nI enjoyed chatting with family and resting in the afternoon.",
+        "categories": {"mood": "Calm and hopeful", "physical_activity": "Mild fatigue", "social": "Enjoyed family conversation"},
+        "is_journal": True,
+    },
+    {
+        "reporter": "Sarah",
+        "raw_text": "Phone update: Booboo sounded in good spirits. She asked about the grandkids and remembered weekend plans.",
+        "categories": {"mood": "Good spirits", "cognition": "Remembered plans", "social": "Engaged phone call"},
+        "is_journal": False,
+    },
+]
+
+history_rows = []
+for days_ago in range(180, -1, -7):
+    target_date = (today - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+    template = weekly_templates[(180 - days_ago) % len(weekly_templates)]
+    history_rows.append(
+        {
+            "timestamp": target_date,
+            "reporter": template["reporter"],
+            "raw_text": template["raw_text"].format(weekday=(today - timedelta(days=days_ago)).strftime("%A")),
+            "categories": template["categories"],
+            "is_journal": template["is_journal"],
+        }
+    )
+
+history_created = add_demo_entries(history_rows)
+print(f"  Added {history_created} backfill entries covering 6 months.")
+
+
+existing_visit_rows = db.query(Visit).filter(Visit.circle_id == demo_circle.id).all()
+existing_visit_keys = {(v.date, v.doctor_name) for v in existing_visit_rows}
+required_visits = [
+    {
+        "doctor_name": "Dr. Patel",
+        "date": (today - timedelta(days=170)).strftime("%Y-%m-%d"),
+        "transcript": "Routine checkup with Dr. Patel. Reviewed sleep quality, appetite, and caregiver notes about occasional confusion after waking.",
+        "key_takeaways": "- Continue current meds\n- Keep logging morning confusion episodes\n- Maintain hydration and regular meals",
+        "created_by": demo_users["Sarah"].id,
+    },
+    {
+        "doctor_name": "Dr. Nguyen",
+        "date": (today - timedelta(days=120)).strftime("%Y-%m-%d"),
+        "transcript": "Orthopedic follow-up for intermittent knee stiffness. Symptoms stable with gentle exercise and rest breaks.",
+        "key_takeaways": "- Continue light exercise\n- Use topical anti-inflammatory for flare-ups\n- Return if pain worsens",
+        "created_by": demo_users["Linda"].id,
+    },
+    {
+        "doctor_name": "Dr. Patel",
+        "date": (today - timedelta(days=75)).strftime("%Y-%m-%d"),
+        "transcript": "Memory-care follow-up. Family reports mixed days with occasional disorientation but good response to routines.",
+        "key_takeaways": "- Reinforce consistent daily routine\n- No medication changes\n- Follow up in 8-10 weeks",
+        "created_by": demo_users["Sarah"].id,
+    },
+    {
+        "doctor_name": "Dr. Rivera",
+        "date": (today - timedelta(days=28)).strftime("%Y-%m-%d"),
+        "transcript": "Primary care check. Discussed activity level, appetite, and family concerns about late-afternoon fatigue.",
+        "key_takeaways": "- Keep regular meal schedule\n- Encourage short walks with breaks\n- Monitor fatigue pattern",
+        "created_by": demo_users["Tom"].id,
+    },
+    {
+        "doctor_name": "Dr. Patel",
+        "date": (today - timedelta(days=7)).strftime("%Y-%m-%d"),
+        "transcript": "Recent follow-up with review of care log trends from the last month.",
+        "key_takeaways": "- Continue current plan\n- Keep documenting discrepancies between self-report and caregiver observations",
+        "created_by": demo_users["Sarah"].id,
+    },
+]
+
+visit_created = 0
+for v in required_visits:
+    key = (v["date"], v["doctor_name"])
+    if key in existing_visit_keys:
+        continue
+    visit = Visit(
+        circle_id=demo_circle.id,
+        doctor_name=v["doctor_name"],
+        date=v["date"],
+        transcript=v["transcript"],
+        key_takeaways=v["key_takeaways"],
+        created_by=v["created_by"],
+    )
+    db.add(visit)
+    existing_visit_keys.add(key)
+    visit_created += 1
+
+if visit_created:
     db.commit()
-    print(f"  Created {len(demo_visits)} demo visits.")
+print(f"  Added {visit_created} backfill doctor visits.")
 
 print("\nDone! Login credentials:")
 print("  Family circle (Mark):     admin / admin123")

@@ -220,8 +220,17 @@ def user_to_dict(u: User) -> dict:
     }
 
 
+def has_public_patient_journal(db: Session, circle_id: int) -> bool:
+    return db.query(User).filter(
+        User.circle_id == circle_id,
+        User.role == "patient",
+        User.journal_public == True,
+        User.active == True,
+    ).first() is not None
+
+
 def filter_entries_for_viewer(entries: list, viewer: User, db: Session) -> list:
-    """Hide entries authored by patients who set journal to private, unless the viewer is that patient."""
+    """Hide only private patient journal entries from non-owners."""
     private_author_ids = {
         u.id
         for u in db.query(User).filter(
@@ -235,7 +244,7 @@ def filter_entries_for_viewer(entries: list, viewer: User, db: Session) -> list:
     out = []
     for e in entries:
         aid = e.created_by
-        if aid and aid in private_author_ids and aid != viewer.id:
+        if aid and aid in private_author_ids and aid != viewer.id and bool(getattr(e, "is_journal", False)):
             continue
         out.append(e)
     return out
@@ -292,6 +301,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
         "token": token,
         "user": user_to_dict(user),
         "circle": circle_to_dict(circle) if circle else None,
+        "shared_journal_enabled": has_public_patient_journal(db, user.circle_id),
     }
 
 @app.get("/api/auth/me")
@@ -307,6 +317,7 @@ def get_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)
     return {
         **user_to_dict(user),
         "circle": circle_to_dict(circle) if circle else None,
+        "shared_journal_enabled": has_public_patient_journal(db, user.circle_id),
     }
 
 
@@ -609,6 +620,7 @@ def ask_question(
             for e in db.query(Entry).filter(
                 Entry.id.in_(entry_ids),
                 Entry.created_by.in_(private_author_ids),
+                Entry.is_journal == True,
             ).all()
             if e.created_by != user.id
         }
