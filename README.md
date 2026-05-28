@@ -162,7 +162,7 @@ New entries are automatically indexed on creation.
 
 ## Background
 
-This project was born from personal experience caring for a family member with dementia. The core problem — that patients can be confidently wrong about their own condition, and the social dynamics of caregiving make it hard for family to correct the record — is one that existing tools don't address.
+This project was born from personal experience caring for a family member with dementia. The core problem — that patients can be confidently wrong about their own condition, and the social dynamics of caregiving make it hard for family to correct the record — is one that existing tools don't address. CareLog is my attempt to build the tool I wished existed: one that captures the gap between self-report and observation without forcing anyone to contradict a loved one in the room.
 
 Built as part of a 90-day AI Product Management development plan, focusing on the Anthropic SDK, RAG pipelines, and practical AI applications for underserved users.
 
