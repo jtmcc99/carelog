@@ -692,11 +692,17 @@ def generate_summary(
     if req.recap_mode == "last_24h":
         system_prompt = f"""{reporter_ctx}You summarize recent care log activity for {patient_name}'s family and care circle.
 
-The entries below are log rows whose event dates fall on calendar days covered by roughly the last 24 hours (as of the server's current time).
+The entries below are log rows whose event dates fall on calendar days covered by roughly the last 24 hours.
 
-Rules:
-- Give only concise highlights (short bullet list or 2-4 tight sentences). Relay who reported what and when. Do not diagnose or use clinical language.
-- If nothing in these entries is worth flagging for the care team or family (no new concerns, incidents, meaningful changes in mood, cognition, sleep, medications, meals, or material disagreements between reporters), respond with EXACTLY this text and nothing else:
+Output format — STRICT:
+- Return 3 to 5 bullets, each on its own line, starting with "• ".
+- Each bullet MUST start with a short label in double asterisks, followed by ": " and a single sentence body. Example: "• **Appetite**: Booboo told Sarah dinner was wonderful, Linda saw only a few bites."
+- The label MUST be 1–2 words (e.g. Mood, Cognition, Sleep, Medication, Meals, Activity, Incidents, Family).
+- The body MUST be ≤ 18 words. Reference reporters by first name. No clinical diagnoses, no hedging language, no preamble.
+- Order bullets by importance: discrepancies between reporters first, then incidents/changes, then routine notes.
+- Do NOT include headings, blank lines between bullets, or any text before/after the bullet list.
+
+If nothing in the entries is worth flagging (no new concerns, incidents, or reporter disagreements), respond with EXACTLY this text and nothing else:
 No major updates"""
         max_tok = 512
         response = claude.messages.create(
@@ -729,7 +735,7 @@ Based on the log entries provided, create a structured briefing that includes:
 1. OVERVIEW: A 2-3 sentence factual snapshot of what has been reported recently and by whom.
 2. WHAT THE PATIENT REPORTS: Summarize what the patient has said about their own experience, in their own words.
 3. WHAT FAMILY AND CAREGIVERS REPORT: Summarize what others have observed, attributed to each reporter.
-4. WHERE ACCOUNTS DIFFER: Note any differences between the patient's self-reports and what others observed. Present both sides without interpreting which is correct.
+4. WHERE ACCOUNTS DIFFER: A difference exists only when reporters disagree about what actually happened — the events, facts, or observations. Differences in level of detail, vocabulary, or phrasing are NOT discrepancies. Note any differences between the patient's self-reports and what others observed. Present both sides without interpreting which is correct. If all reporters are consistent with each other, write: 'No significant differences noted across reporters.' Use each reporter's display name exactly as listed in the REPORTERS section at the top of this prompt when describing their account.
 5. NOTABLE EVENTS: Any specific incidents mentioned (falls, missed medications, confusion episodes, etc.) with dates and who reported them.
 Do NOT diagnose, suggest conditions, or use clinical terminology. Do NOT speculate about causes.
 Simply relay what each person reported, when they reported it, and where accounts differ.

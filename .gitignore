@@ -11,3 +11,4 @@ doctor_visits.json
 .env
 frontend/dist/
 .vercel/
+evals/results/*.json

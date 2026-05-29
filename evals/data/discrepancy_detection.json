@@ -1,0 +1,840 @@
+[
+  {
+    "id": "disc_001",
+    "description": "No discrepancy: medication taken",
+    "entries": [
+      {
+        "timestamp": "2026-05-01",
+        "reporter": "Booboo",
+        "raw_text": "I took my morning pills after breakfast today.",
+        "categories": {
+          "medication": "Patient reports taking morning medication after breakfast"
+        }
+      },
+      {
+        "timestamp": "2026-05-01",
+        "reporter": "Tom (son)",
+        "raw_text": "Mom took her morning medications with breakfast. I watched her take them.",
+        "categories": {
+          "medication": "Caregiver confirms patient took morning medication with breakfast"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Tom (son)", "relationship": "son" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": false,
+      "discrepancy_type": null,
+      "description": "Both patient and caregiver agree that morning medication was taken",
+      "key_reporters": []
+    }
+  },
+  {
+    "id": "disc_002",
+    "description": "Patient says medication was taken, son finds pills still in organizer",
+    "entries": [
+      {
+        "timestamp": "2026-05-02",
+        "reporter": "Booboo",
+        "raw_text": "I already took my morning pills. I always remember them.",
+        "categories": {
+          "medication": "Patient reports taking morning medication"
+        }
+      },
+      {
+        "timestamp": "2026-05-02",
+        "reporter": "Tom (son)",
+        "raw_text": "Dad's morning pills were still in the pill organizer when I arrived. He had not taken them yet.",
+        "categories": {
+          "medication": "Caregiver reports morning medication was not taken"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Tom (son)", "relationship": "son" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "medication_adherence",
+      "description": "Patient reports taking morning medication, but caregiver reports pills were still in organizer",
+      "key_reporters": ["Booboo", "Tom (son)"]
+    }
+  },
+  {
+    "id": "disc_003",
+    "description": "Patient reports full lunch, caregiver reports minimal intake",
+    "entries": [
+      {
+        "timestamp": "2026-05-03",
+        "reporter": "Booboo",
+        "raw_text": "I ate a full lunch today and felt fine afterward.",
+        "categories": {
+          "nutrition": "Patient reports eating a full lunch"
+        }
+      },
+      {
+        "timestamp": "2026-05-03",
+        "reporter": "Maria (caregiver)",
+        "raw_text": "She only ate a few bites of soup and half a cracker at lunch. She said she was not hungry.",
+        "categories": {
+          "nutrition": "Caregiver reports patient ate very little lunch"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Maria (caregiver)", "relationship": "caregiver" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "nutrition_intake",
+      "description": "Patient reports eating a full lunch, while caregiver reports minimal intake",
+      "key_reporters": ["Booboo", "Maria (caregiver)"]
+    }
+  },
+  {
+    "id": "disc_004",
+    "description": "No discrepancy: both report low appetite",
+    "entries": [
+      {
+        "timestamp": "2026-05-04",
+        "reporter": "Booboo",
+        "raw_text": "I was not very hungry at lunch.",
+        "categories": {
+          "nutrition": "Patient reports low appetite at lunch"
+        }
+      },
+      {
+        "timestamp": "2026-05-04",
+        "reporter": "Angela (aide)",
+        "raw_text": "He picked at his lunch and ate less than usual.",
+        "categories": {
+          "nutrition": "Aide reports patient ate less than usual"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Angela (aide)", "relationship": "aide" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": false,
+      "discrepancy_type": null,
+      "description": "Both reports indicate reduced appetite at lunch",
+      "key_reporters": []
+    }
+  },
+  {
+    "id": "disc_005",
+    "description": "Patient says he stayed home, neighbor saw him outside confused",
+    "entries": [
+      {
+        "timestamp": "2026-05-05",
+        "reporter": "Booboo",
+        "raw_text": "I stayed home all afternoon watching television.",
+        "categories": {
+          "activity": "Patient reports staying home all afternoon"
+        }
+      },
+      {
+        "timestamp": "2026-05-05",
+        "reporter": "Linda (neighbor)",
+        "raw_text": "I saw Mr. Harris walking alone two blocks from home around 3:30 PM. He seemed unsure where he was going.",
+        "categories": {
+          "safety": "Neighbor reports patient was walking alone away from home and appeared disoriented"
+        }
+      },
+      {
+        "timestamp": "2026-05-05",
+        "reporter": "Tom (son)",
+        "raw_text": "Dad denied leaving the house, but his shoes were wet and the front door was unlocked.",
+        "categories": {
+          "safety": "Caregiver found evidence suggesting patient left the house"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Linda (neighbor)", "relationship": "neighbor" },
+      { "display_name": "Tom (son)", "relationship": "son" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "wandering_denial",
+      "description": "Patient reports staying home, but neighbor and caregiver evidence suggest he left the house alone",
+      "key_reporters": ["Booboo", "Linda (neighbor)", "Tom (son)"]
+    }
+  },
+  {
+    "id": "disc_006",
+    "description": "Patient denies fall, spouse reports bathroom fall",
+    "entries": [
+      {
+        "timestamp": "2026-05-06",
+        "reporter": "Booboo",
+        "raw_text": "I did not fall today. I am walking just fine.",
+        "categories": {
+          "incidents": "Patient denies falling"
+        }
+      },
+      {
+        "timestamp": "2026-05-06",
+        "reporter": "Susan (spouse)",
+        "raw_text": "She slipped in the bathroom this morning. She did not hit her head, but she needed help getting up.",
+        "categories": {
+          "incidents": "Spouse reports patient fell in bathroom and needed help getting up"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Susan (spouse)", "relationship": "spouse" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "incident_denial",
+      "description": "Patient denies falling, while spouse reports a bathroom fall requiring assistance",
+      "key_reporters": ["Booboo", "Susan (spouse)"]
+    }
+  },
+  {
+    "id": "disc_007",
+    "description": "No discrepancy: both report minor balance incident",
+    "entries": [
+      {
+        "timestamp": "2026-05-07",
+        "reporter": "Booboo",
+        "raw_text": "I slipped a little in the hallway this morning but did not get hurt.",
+        "categories": {
+          "incidents": "Patient reports minor slip without injury"
+        }
+      },
+      {
+        "timestamp": "2026-05-07",
+        "reporter": "Maria (caregiver)",
+        "raw_text": "He lost his balance in the hallway but caught himself on the wall. No injury observed.",
+        "categories": {
+          "incidents": "Caregiver reports minor balance issue without injury"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Maria (caregiver)", "relationship": "caregiver" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": false,
+      "discrepancy_type": null,
+      "description": "Both accounts describe a minor balance incident without injury",
+      "key_reporters": []
+    }
+  },
+  {
+    "id": "disc_008",
+    "description": "Patient denies pain, aide observes pain behaviors",
+    "entries": [
+      {
+        "timestamp": "2026-05-08",
+        "reporter": "Booboo",
+        "raw_text": "My knee feels fine today. No pain.",
+        "categories": {
+          "symptoms": "Patient denies knee pain"
+        }
+      },
+      {
+        "timestamp": "2026-05-08",
+        "reporter": "Angela (aide)",
+        "raw_text": "He grimaced when standing up and said 'ouch' several times while walking to the kitchen. He avoided putting weight on his right knee.",
+        "categories": {
+          "symptoms": "Aide observed signs of right knee pain"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Angela (aide)", "relationship": "aide" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "symptom_denial",
+      "description": "Patient denies knee pain, but aide observes pain behaviors and reduced weight-bearing",
+      "key_reporters": ["Booboo", "Angela (aide)"]
+    }
+  },
+  {
+    "id": "disc_009",
+    "description": "Patient reports sleeping well, spouse reports nighttime wakefulness",
+    "entries": [
+      {
+        "timestamp": "2026-05-09",
+        "reporter": "Booboo",
+        "raw_text": "I slept well all night.",
+        "categories": {
+          "sleep": "Patient reports sleeping well"
+        }
+      },
+      {
+        "timestamp": "2026-05-09",
+        "reporter": "Susan (spouse)",
+        "raw_text": "He was awake from about 2 AM to 4 AM, walking around the bedroom and opening dresser drawers.",
+        "categories": {
+          "sleep": "Spouse reports patient was awake and active during the night"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Susan (spouse)", "relationship": "spouse" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "sleep_report_mismatch",
+      "description": "Patient reports sleeping well, while spouse reports prolonged nighttime wakefulness and activity",
+      "key_reporters": ["Booboo", "Susan (spouse)"]
+    }
+  },
+  {
+    "id": "disc_010",
+    "description": "Patient says she showered, daughter sees evidence she did not",
+    "entries": [
+      {
+        "timestamp": "2026-05-10",
+        "reporter": "Booboo",
+        "raw_text": "I showered and changed clothes this morning.",
+        "categories": {
+          "hygiene": "Patient reports showering and changing clothes"
+        }
+      },
+      {
+        "timestamp": "2026-05-10",
+        "reporter": "Emily (daughter)",
+        "raw_text": "Mom was still wearing yesterday's clothes. The shower was dry and the towel had not been used.",
+        "categories": {
+          "hygiene": "Daughter reports evidence that patient did not shower or change clothes"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Emily (daughter)", "relationship": "daughter" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "hygiene_report_mismatch",
+      "description": "Patient reports showering and changing clothes, but caregiver evidence suggests she did not",
+      "key_reporters": ["Booboo", "Emily (daughter)"]
+    }
+  },
+  {
+    "id": "disc_011",
+    "description": "Patient reports cheerful mood, caregiver reports crying and distress",
+    "entries": [
+      {
+        "timestamp": "2026-05-11",
+        "reporter": "Booboo",
+        "raw_text": "I felt cheerful today. Nothing upset me.",
+        "categories": {
+          "mood": "Patient reports positive mood and no distress"
+        }
+      },
+      {
+        "timestamp": "2026-05-11",
+        "reporter": "Maria (caregiver)",
+        "raw_text": "She cried twice this afternoon and repeatedly said she wanted to go home, even though she was already at home.",
+        "categories": {
+          "mood": "Caregiver reports crying, distress, and confusion about being home"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Maria (caregiver)", "relationship": "caregiver" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "mood_report_mismatch",
+      "description": "Patient reports cheerful mood, while caregiver reports crying and distress",
+      "key_reporters": ["Booboo", "Maria (caregiver)"]
+    }
+  },
+  {
+    "id": "disc_012",
+    "description": "Patient denies argument, son reports agitation and accusation",
+    "entries": [
+      {
+        "timestamp": "2026-05-12",
+        "reporter": "Booboo",
+        "raw_text": "Dinner was normal. I did not argue with anyone.",
+        "categories": {
+          "behavior": "Patient denies conflict or agitation at dinner"
+        }
+      },
+      {
+        "timestamp": "2026-05-12",
+        "reporter": "Tom (son)",
+        "raw_text": "During dinner Dad became angry, accused me of stealing his wallet, and refused to sit back down for about 20 minutes.",
+        "categories": {
+          "behavior": "Son reports agitation, accusation, and refusal to sit during dinner"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Tom (son)", "relationship": "son" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "behavior_denial",
+      "description": "Patient reports no argument, while son reports agitation and accusation during dinner",
+      "key_reporters": ["Booboo", "Tom (son)"]
+    }
+  },
+  {
+    "id": "disc_013",
+    "description": "Patient says she attended PT, daughter says appointment was missed",
+    "entries": [
+      {
+        "timestamp": "2026-05-13",
+        "reporter": "Booboo",
+        "raw_text": "I went to my physical therapy appointment this morning.",
+        "categories": {
+          "appointments": "Patient reports attending physical therapy appointment"
+        }
+      },
+      {
+        "timestamp": "2026-05-13",
+        "reporter": "Emily (daughter)",
+        "raw_text": "The PT office called to say Mom missed her appointment. She insisted she had already gone.",
+        "categories": {
+          "appointments": "Daughter reports physical therapy office said appointment was missed"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Emily (daughter)", "relationship": "daughter" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "appointment_attendance_mismatch",
+      "description": "Patient reports attending PT, but caregiver reports the office said the appointment was missed",
+      "key_reporters": ["Booboo", "Emily (daughter)"]
+    }
+  },
+  {
+    "id": "disc_014",
+    "description": "No discrepancy: both report elevated blood pressure at doctor visit",
+    "entries": [
+      {
+        "timestamp": "2026-05-14",
+        "reporter": "Booboo",
+        "raw_text": "The doctor said my blood pressure was a little high.",
+        "categories": {
+          "medical_visit": "Patient reports doctor noted elevated blood pressure"
+        }
+      },
+      {
+        "timestamp": "2026-05-14",
+        "reporter": "Tom (son)",
+        "raw_text": "At the visit, the doctor mentioned her blood pressure was elevated and asked us to monitor it at home.",
+        "categories": {
+          "medical_visit": "Son reports doctor noted elevated blood pressure and recommended monitoring"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Tom (son)", "relationship": "son" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": false,
+      "discrepancy_type": null,
+      "description": "Both accounts report elevated blood pressure at the doctor visit",
+      "key_reporters": []
+    }
+  },
+  {
+    "id": "disc_015",
+    "description": "Patient denies purchases, daughter finds same-day receipts",
+    "entries": [
+      {
+        "timestamp": "2026-05-15",
+        "reporter": "Booboo",
+        "raw_text": "I did not buy anything today.",
+        "categories": {
+          "finances": "Patient denies making purchases"
+        }
+      },
+      {
+        "timestamp": "2026-05-15",
+        "reporter": "Emily (daughter)",
+        "raw_text": "I found three receipts from today totaling $186. Mom bought duplicate groceries and another set of batteries she did not need.",
+        "categories": {
+          "finances": "Daughter reports same-day receipts for unnecessary duplicate purchases"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Emily (daughter)", "relationship": "daughter" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "financial_activity_denial",
+      "description": "Patient reports no purchases, but caregiver found same-day receipts for multiple purchases",
+      "key_reporters": ["Booboo", "Emily (daughter)"]
+    }
+  },
+  {
+    "id": "disc_016",
+    "description": "Patient says he did not cook, caregiver finds signs of stove use",
+    "entries": [
+      {
+        "timestamp": "2026-05-16",
+        "reporter": "Booboo",
+        "raw_text": "I did not cook today. I just had leftovers.",
+        "categories": {
+          "meals": "Patient denies cooking"
+        }
+      },
+      {
+        "timestamp": "2026-05-16",
+        "reporter": "Maria (caregiver)",
+        "raw_text": "When I arrived, the front burner was still warm and a pan with burned eggs was on the stove. The kitchen smelled smoky.",
+        "categories": {
+          "safety": "Caregiver reports evidence of recent stove use and possible cooking safety issue"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Maria (caregiver)", "relationship": "caregiver" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "home_safety_denial",
+      "description": "Patient reports not cooking, while caregiver observed evidence of recent cooking and possible stove safety risk",
+      "key_reporters": ["Booboo", "Maria (caregiver)"]
+    }
+  },
+  {
+    "id": "disc_017",
+    "description": "Possible duplicate medication dose",
+    "entries": [
+      {
+        "timestamp": "2026-05-17",
+        "reporter": "Booboo",
+        "raw_text": "I took my blood pressure pill after breakfast.",
+        "categories": {
+          "medication": "Patient reports taking blood pressure medication after breakfast"
+        }
+      },
+      {
+        "timestamp": "2026-05-17",
+        "reporter": "Susan (spouse)",
+        "raw_text": "He asked if he had taken his blood pressure pill and then took one from the bottle. I am not sure whether he had already taken one earlier.",
+        "categories": {
+          "medication": "Spouse reports possible duplicate dose due to uncertainty"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Susan (spouse)", "relationship": "spouse" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "possible_duplicate_medication",
+      "description": "Patient says he took medication after breakfast, while spouse reports he may have taken another dose due to uncertainty",
+      "key_reporters": ["Booboo", "Susan (spouse)"]
+    }
+  },
+  {
+    "id": "disc_018",
+    "description": "No discrepancy: patient had not eaten yet, aide reports later breakfast",
+    "entries": [
+      {
+        "timestamp": "2026-05-18",
+        "reporter": "Booboo",
+        "raw_text": "I have not eaten breakfast yet.",
+        "categories": {
+          "nutrition": "Patient reports not having eaten breakfast yet"
+        }
+      },
+      {
+        "timestamp": "2026-05-18",
+        "reporter": "Angela (aide)",
+        "raw_text": "He ate oatmeal and banana at 10 AM.",
+        "categories": {
+          "nutrition": "Aide reports patient ate breakfast later in the morning"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Angela (aide)", "relationship": "aide" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": false,
+      "discrepancy_type": null,
+      "description": "Patient reported not eating yet before breakfast occurred; aide reports breakfast happened later",
+      "key_reporters": []
+    }
+  },
+  {
+    "id": "disc_019",
+    "description": "Patient reports breakfast, daughter finds breakfast untouched",
+    "entries": [
+      {
+        "timestamp": "2026-05-19",
+        "reporter": "Booboo",
+        "raw_text": "I ate breakfast around 8 AM before my daughter came over.",
+        "categories": {
+          "nutrition": "Patient reports eating breakfast before daughter arrived"
+        }
+      },
+      {
+        "timestamp": "2026-05-19",
+        "reporter": "Emily (daughter)",
+        "raw_text": "When I arrived at 9:30 AM, there were no dishes out and the breakfast tray I left was untouched. He said he had not eaten yet.",
+        "categories": {
+          "nutrition": "Daughter reports breakfast was untouched after patient claimed to have eaten"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Emily (daughter)", "relationship": "daughter" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "nutrition_intake",
+      "description": "Patient reports eating breakfast before 9:30 AM, while daughter observed breakfast untouched after that time",
+      "key_reporters": ["Booboo", "Emily (daughter)"]
+    }
+  },
+  {
+    "id": "disc_020",
+    "description": "Patient says he asked once, spouse reports repeated questioning",
+    "entries": [
+      {
+        "timestamp": "2026-05-20",
+        "reporter": "Booboo",
+        "raw_text": "I only asked about the doctor appointment once.",
+        "categories": {
+          "memory": "Patient reports asking about appointment only once"
+        }
+      },
+      {
+        "timestamp": "2026-05-20",
+        "reporter": "Susan (spouse)",
+        "raw_text": "He asked what time the doctor appointment was at least seven times between lunch and 3 PM.",
+        "categories": {
+          "memory": "Spouse reports repeated questioning about doctor appointment"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Susan (spouse)", "relationship": "spouse" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "memory_behavior_mismatch",
+      "description": "Patient reports asking once, while spouse reports repeated questioning",
+      "key_reporters": ["Booboo", "Susan (spouse)"]
+    }
+  },
+  {
+    "id": "disc_021",
+    "description": "Patient says no one visited, granddaughter reports visit",
+    "entries": [
+      {
+        "timestamp": "2026-05-21",
+        "reporter": "Booboo",
+        "raw_text": "No one came by today. I was alone all day.",
+        "categories": {
+          "social": "Patient reports no visitors and being alone all day"
+        }
+      },
+      {
+        "timestamp": "2026-05-21",
+        "reporter": "Lily (granddaughter)",
+        "raw_text": "I visited Grandma from 2 PM to 3 PM. We had tea together and looked at photo albums.",
+        "categories": {
+          "social": "Granddaughter reports visiting patient for one hour"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Lily (granddaughter)", "relationship": "granddaughter" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "memory_social_visit_mismatch",
+      "description": "Patient reports no visitors, but granddaughter reports visiting for an hour",
+      "key_reporters": ["Booboo", "Lily (granddaughter)"]
+    }
+  },
+  {
+    "id": "disc_022",
+    "description": "No discrepancy: tired in morning, energetic in afternoon",
+    "entries": [
+      {
+        "timestamp": "2026-05-22",
+        "reporter": "Booboo",
+        "raw_text": "I felt tired this morning.",
+        "categories": {
+          "energy": "Patient reports feeling tired in the morning"
+        }
+      },
+      {
+        "timestamp": "2026-05-22",
+        "reporter": "Maria (caregiver)",
+        "raw_text": "By the afternoon, she seemed more energetic and agreed to walk around the block.",
+        "categories": {
+          "energy": "Caregiver reports patient had more energy in the afternoon"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Maria (caregiver)", "relationship": "caregiver" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": false,
+      "discrepancy_type": null,
+      "description": "The reports concern different times of day and can both be true",
+      "key_reporters": []
+    }
+  },
+  {
+    "id": "disc_023",
+    "description": "Patient reports cooperating, aide reports refusal of care",
+    "entries": [
+      {
+        "timestamp": "2026-05-23",
+        "reporter": "Booboo",
+        "raw_text": "I cooperated with everything the aide asked me to do today.",
+        "categories": {
+          "care_cooperation": "Patient reports cooperating with care"
+        }
+      },
+      {
+        "timestamp": "2026-05-23",
+        "reporter": "Angela (aide)",
+        "raw_text": "He refused to change clothes and would not let me help him wash up, even after several gentle reminders.",
+        "categories": {
+          "care_cooperation": "Aide reports patient refused clothing change and washing assistance"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Angela (aide)", "relationship": "aide" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "care_refusal_denial",
+      "description": "Patient reports cooperating with care, while aide reports refusal of hygiene and clothing assistance",
+      "key_reporters": ["Booboo", "Angela (aide)"]
+    }
+  },
+  {
+    "id": "disc_024",
+    "description": "Patient reports strangers in room, spouse reports no one was there",
+    "entries": [
+      {
+        "timestamp": "2026-05-24",
+        "reporter": "Booboo",
+        "raw_text": "There were strangers in the living room tonight. They would not leave.",
+        "categories": {
+          "perception": "Patient reports seeing strangers in the living room"
+        }
+      },
+      {
+        "timestamp": "2026-05-24",
+        "reporter": "Susan (spouse)",
+        "raw_text": "No one else was in the house tonight. She pointed at shadows near the curtains and said people were standing there.",
+        "categories": {
+          "perception": "Spouse reports no one was present and patient may have misperceived shadows"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Susan (spouse)", "relationship": "spouse" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "perception_mismatch",
+      "description": "Patient reports strangers in the room, while spouse reports no one was present and patient appeared to misperceive shadows",
+      "key_reporters": ["Booboo", "Susan (spouse)"]
+    }
+  },
+  {
+    "id": "disc_025",
+    "description": "Multiple discrepancies: medication, lunch, and wandering",
+    "entries": [
+      {
+        "timestamp": "2026-05-25",
+        "reporter": "Booboo",
+        "raw_text": "Today was normal. I took my pills, ate lunch, and stayed inside.",
+        "categories": {
+          "medication": "Patient reports taking medication",
+          "nutrition": "Patient reports eating lunch",
+          "activity": "Patient reports staying inside"
+        }
+      },
+      {
+        "timestamp": "2026-05-25",
+        "reporter": "Emily (daughter)",
+        "raw_text": "Mom's noon medication was still in the pill box. The lunch I left was untouched. A neighbor also called to say Mom was outside near the corner around 2 PM looking confused.",
+        "categories": {
+          "medication": "Daughter reports noon medication was not taken",
+          "nutrition": "Daughter reports lunch was untouched",
+          "safety": "Neighbor reported patient was outside looking confused"
+        }
+      }
+    ],
+    "patient_name": "Booboo",
+    "reporters": [
+      { "display_name": "Booboo", "relationship": "patient" },
+      { "display_name": "Emily (daughter)", "relationship": "daughter" }
+    ],
+    "ground_truth": {
+      "has_discrepancy": true,
+      "discrepancy_type": "multiple_discrepancies",
+      "description": "Patient reports taking pills, eating lunch, and staying inside, while daughter reports medication was still in pill box, lunch was untouched, and neighbor saw patient outside confused",
+      "key_reporters": ["Booboo", "Emily (daughter)"]
+    }
+  }
+]
